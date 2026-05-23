@@ -1,0 +1,228 @@
+{
+  "experiment_id": "C071_l4_vllm_model_probe",
+  "run_id": "20260523T140034Z_baseline_26",
+  "status": "completed",
+  "candidate": "baseline",
+  "model_ref": "Qwen/Qwen3-0.6B",
+  "model_source": "huggingface",
+  "model_size_bytes_local": null,
+  "hf_metadata": {
+    "sha": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "created_at": "2025-04-27 03:40:08+00:00",
+    "last_modified": "2025-07-26 03:46:27+00:00",
+    "pipeline_tag": "text-generation",
+    "total_file_size_bytes": 1519209243,
+    "safetensors": [
+      {
+        "name": "model.safetensors",
+        "size": 1503300328
+      }
+    ]
+  },
+  "config": {
+    "sample_source": "hard_audit",
+    "sample_size_requested": 26,
+    "max_model_len": 4096,
+    "max_tokens": 384,
+    "temperature": 0.0,
+    "top_k": -1,
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "seed": 0,
+    "user_message_only": true,
+    "enable_thinking_false_in_template": true,
+    "router_retrieval_cache_handlers_sft_lora": false
+  },
+  "environment": {
+    "python": "3.12.13 (main, Mar  4 2026, 09:23:07) [GCC 11.4.0]",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.35",
+    "cwd": "/content/tmp_C_efficiency",
+    "nvidia_smi_path": "/opt/bin/nvidia-smi",
+    "disk": "Filesystem      Size  Used Avail Use% Mounted on\noverlay         236G   55G  182G  24% /",
+    "torch": "2.8.0+cu128",
+    "cuda_available": true,
+    "cuda_version": "12.8",
+    "gpu_count": 1,
+    "gpus": [
+      {
+        "index": 0,
+        "name": "NVIDIA L4",
+        "total_memory_bytes": 23659151360
+      }
+    ],
+    "transformers": "4.56.1",
+    "vllm": "0.11.0",
+    "nvidia_smi": "Sat May 23 14:00:35 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA L4                      Off |   00000000:00:03.0 Off |                    0 |\n| N/A   48C    P8             15W /   72W |       3MiB /  23034MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|  No running processes found                                                             |\n+-----------------------------------------------------------------------------------------+"
+  },
+  "paths": {
+    "summary": "results/C071_l4_vllm_model_probe/20260523T140034Z_baseline_26.summary.json",
+    "outputs": "results/C071_l4_vllm_model_probe/20260523T140034Z_baseline_26.outputs.jsonl",
+    "samples": "results/C071_l4_vllm_model_probe/20260523T140034Z_baseline_26.samples.jsonl"
+  },
+  "sample": {
+    "rows": 26,
+    "category_counts": {
+      "English grammar": 2,
+      "Russian grammar": 2,
+      "Russian morphology": 2,
+      "algebra/equations": 2,
+      "arithmetic/fractions": 2,
+      "chemistry balancing": 2,
+      "chemistry explanation": 2,
+      "geometry": 2,
+      "history/geography/biology": 2,
+      "literature/essay": 2,
+      "other": 2,
+      "translation": 2,
+      "word problems": 2
+    }
+  },
+  "runtime": {
+    "tokenizer_load_s": 3.944251234999683,
+    "startup_s": 127.92919705099985,
+    "generation_s": 3.22305323899991,
+    "sample_rows": 26,
+    "throughput_output_tokens_per_s": 1565.285965169296,
+    "throughput_questions_per_s": 8.066885053399742,
+    "projected_generation_4000_s": 495.8543444615246,
+    "projected_total_4000_s": 623.7835415125244,
+    "peak_vram_used_mb_nvidia_smi": 21182
+  },
+  "tokens": {
+    "avg_input_tokens": 45.03846153846154,
+    "max_input_tokens": 152,
+    "avg_output_tokens": 194.03846153846155,
+    "max_output_tokens": 384,
+    "total_output_tokens": 5045
+  },
+  "validity": {
+    "jsonl_rows": 26,
+    "one_answer_per_input": true,
+    "thinking_trace_rows": 0,
+    "max_token_hit_rows": 2,
+    "empty_answer_rows": 0,
+    "repetition_loop_suspected_rows": 6
+  },
+  "gpu_memory_samples": [
+    {
+      "timestamp": "2026/05/23 14:02:47.405",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19302,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:47.925",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19364,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:48.446",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19432,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:48.967",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19490,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:49.486",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19544,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:50.006",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19604,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:50.527",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19650,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:51.047",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19686,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:51.567",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19734,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:52.087",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 19764,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:52.608",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:53.127",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:53.647",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:54.167",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:54.688",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:55.211",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:55.734",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:56.257",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:56.780",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    },
+    {
+      "timestamp": "2026/05/23 14:02:57.301",
+      "name": "NVIDIA L4",
+      "memory_used_mb": 21182,
+      "memory_total_mb": 23034
+    }
+  ]
+}
