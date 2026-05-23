@@ -1,0 +1,22 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+*.so
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Large/generated artifacts.
+baseline_submission.zip
+*.zip
+results/
+
+# Model weights must be downloaded in Colab/runtime, not committed.
+simple_solution/weights/
+*.safetensors
+*.bin
+*.gguf
+*.pt
+*.pth

@@ -1,0 +1,152 @@
+{
+  "research_id": "C009",
+  "objective": "Validation/cache audit for exact direct-cache feasibility without production behavior changes.",
+  "data": {
+    "train_path": "data/dataset_ml_challenge.parquet",
+    "row_count": 10000,
+    "columns": [
+      "answer",
+      "query"
+    ],
+    "missing_query": 0,
+    "missing_answer": 0
+  },
+  "normalization": {
+    "strict": "NFC Unicode normalization, casefolding, whitespace collapse, quote cleanup, dash/minus cleanup; preserves numbers, formulas, units, punctuation classes, and yo/ё.",
+    "relaxed": "Strict key plus ё->е only; candidate recall/conflict analysis only."
+  },
+  "category_counts": {
+    "other": 1945,
+    "arithmetic/fractions": 1859,
+    "Russian grammar": 1261,
+    "algebra/equations": 893,
+    "literature/essay": 739,
+    "chemistry explanation": 712,
+    "Russian morphology": 587,
+    "geometry": 534,
+    "word problems": 440,
+    "history/geography/biology": 409,
+    "English grammar": 343,
+    "chemistry balancing": 157,
+    "translation": 121
+  },
+  "split_counts": {
+    "train": 8000,
+    "val": 2000
+  },
+  "split_counts_by_category": {
+    "English grammar": {
+      "train": 274,
+      "val": 69
+    },
+    "Russian grammar": {
+      "train": 1008,
+      "val": 253
+    },
+    "Russian morphology": {
+      "train": 470,
+      "val": 117
+    },
+    "algebra/equations": {
+      "train": 715,
+      "val": 178
+    },
+    "arithmetic/fractions": {
+      "train": 1480,
+      "val": 379
+    },
+    "chemistry balancing": {
+      "train": 126,
+      "val": 31
+    },
+    "chemistry explanation": {
+      "train": 570,
+      "val": 142
+    },
+    "geometry": {
+      "train": 426,
+      "val": 108
+    },
+    "history/geography/biology": {
+      "train": 326,
+      "val": 83
+    },
+    "literature/essay": {
+      "train": 592,
+      "val": 147
+    },
+    "other": {
+      "train": 1564,
+      "val": 381
+    },
+    "translation": {
+      "train": 97,
+      "val": 24
+    },
+    "word problems": {
+      "train": 352,
+      "val": 88
+    }
+  },
+  "exact_cache": {
+    "unique_strict_keys": 9993,
+    "duplicate_key_count": 5,
+    "duplicate_excess_rows": 7,
+    "duplicate_rows_in_duplicate_keys": 12,
+    "conflicting_answer_key_count": 0,
+    "conflicting_answer_row_count": 0,
+    "strict_cache_probe_holdout_rows": 2000,
+    "strict_cache_probe_hit_rows": 2,
+    "strict_cache_probe_hit_rate": 0.001,
+    "strict_cache_probe_hit_rate_all_rows": 0.0002,
+    "strict_cache_safe_hit_rows": 2,
+    "strict_cache_estimated_precision_safe": 1.0,
+    "strict_cache_estimated_precision_naive": 1.0,
+    "relaxed_unique_keys": 9993,
+    "relaxed_duplicate_key_count": 5,
+    "relaxed_conflicting_answer_key_count": 0,
+    "relaxed_extra_collision_key_count": 0,
+    "relaxed_extra_collision_conflicting_key_count": 0,
+    "relaxed_recall_probe_hit_rows": 2,
+    "relaxed_recall_probe_hit_rate": 0.001
+  },
+  "near_duplicates": {
+    "method": "strict normalized template key with quoted spans and numeric literals masked; exact strict groups are retained under the same family for split leakage control.",
+    "near_duplicate_family_count": 145,
+    "near_duplicate_row_count": 674,
+    "near_template_conflict_family_count": 141,
+    "near_template_conflict_row_count": 664
+  },
+  "category_duplicate_rows": {
+    "other": 10,
+    "Russian grammar": 2
+  },
+  "category_conflict_rows": {},
+  "category_near_family_rows": {
+    "other": 222,
+    "arithmetic/fractions": 213,
+    "Russian morphology": 100,
+    "Russian grammar": 61,
+    "literature/essay": 57,
+    "word problems": 8,
+    "algebra/equations": 5,
+    "geometry": 3,
+    "history/geography/biology": 3,
+    "translation": 2
+  },
+  "conflict_type_counts": {},
+  "conflict_category_counts": {},
+  "hard_audit": {
+    "row_count": 765,
+    "reason_counts": {
+      "near_template_mixed_answers": 664,
+      "category_edge_sample": 104
+    },
+    "path": "c009_artifacts/hard_audit_set.csv"
+  },
+  "artifacts": {
+    "summary_json": "c009_artifacts/summary.json",
+    "locked_validation_split_csv": "c009_artifacts/locked_validation_split.csv",
+    "hard_audit_set_csv": "c009_artifacts/hard_audit_set.csv"
+  }
+}
