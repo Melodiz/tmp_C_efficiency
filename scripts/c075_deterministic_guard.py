@@ -59,7 +59,7 @@ def final_answer(answer: str) -> str:
 
 def arithmetic_guard(question: str) -> dict[str, Any] | None:
     q = normalize_text(question)
-    simple = re.fullmatch(rf"({NUMBER_RE})\s*([+\-*/×xх])\s*({NUMBER_RE})\s*=*\s*", q)
+    simple = re.fullmatch(rf"({NUMBER_RE})\s*([+\-*×xх])\s*({NUMBER_RE})\s*=*\s*", q)
     if simple:
         left = parse_decimal(simple.group(1))
         right = parse_decimal(simple.group(3))
@@ -72,10 +72,6 @@ def arithmetic_guard(question: str) -> dict[str, Any] | None:
             value = left - right
         elif op in {"*", "×", "x", "х"}:
             value = left * right
-        elif op == "/":
-            if right == 0:
-                return None
-            value = left / right
         else:
             return None
         answer = format_decimal(value)
