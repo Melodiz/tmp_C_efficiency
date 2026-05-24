@@ -236,12 +236,15 @@ def apply_guard(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[
     guarded_rows: list[dict[str, Any]] = []
     by_kind: Counter[str] = Counter()
     applied_row_ids: list[int] = []
+    present_known: list[int] = []
     corrected_known: dict[str, str] = {}
     for row in rows:
         new_row = dict(row)
+        row_id = int(row["row_id"])
+        if row_id in KNOWN_C073_MISSES:
+            present_known.append(row_id)
         guard = deterministic_guard(str(row.get("question", "")))
         if guard is not None:
-            row_id = int(row["row_id"])
             by_kind[str(guard["kind"])] += 1
             applied_row_ids.append(row_id)
             if row_id in KNOWN_C073_MISSES:
@@ -268,6 +271,7 @@ def apply_guard(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[
         "applied_row_ids": applied_row_ids,
         "by_kind": dict(sorted(by_kind.items())),
         "known_c073_misses": KNOWN_C073_MISSES,
+        "present_known_misses": present_known,
         "corrected_known_misses": corrected_known,
     }
     return guarded_rows, stats
@@ -385,7 +389,8 @@ def decision_recommendation(metrics: dict[str, Any], dry_run: bool) -> tuple[str
         return "KILL", "Basic validity failed after deterministic guard application."
     if isinstance(projected, (int, float)) and projected >= 12:
         return "KILL", "Projected runtime misses the 12 minute gate."
-    if not all(str(row_id) in corrected for row_id in [2987, 7012, 9168, 6234]):
+    present_known = guard_stats.get("present_known_misses") or []
+    if present_known and not all(str(row_id) in corrected for row_id in present_known):
         return "MUTATE", "The guard is promising but did not cover every known C073 arithmetic/unit miss."
     return "MUTATE", "Known arithmetic/unit misses are corrected; English/grammar regressions and packaging remain unresolved."
 
@@ -432,6 +437,7 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
         "## Guard Coverage",
         f"- applied rows: `{applied_rows}`",
         f"- by kind: `{guard_stats.get('by_kind', {})}`",
+        f"- known C073 misses present in sample: `{guard_stats.get('present_known_misses', [])}`",
         f"- corrected known C073 misses: `{corrected}`",
         "",
         "## Remaining Known Risk",
@@ -491,6 +497,7 @@ def create_dry_run(paths: dict[str, Path], args: argparse.Namespace) -> dict[str
             "applied_row_ids": [],
             "by_kind": {},
             "known_c073_misses": KNOWN_C073_MISSES,
+            "present_known_misses": [],
             "corrected_known_misses": {},
         },
         "paths": {
