@@ -9,6 +9,7 @@ import c075_deterministic_guard
 import c076_c075_guard_heldout_validation
 import c077_slash_fraction_guard_abstention
 import c078_quantized_8b_awq_feasibility
+import c079_qwen3_8b_awq_float16_unblock
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -16,7 +17,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--id",
         required=True,
-        choices=["C072", "C073", "C075", "C076", "C077", "C078"],
+        choices=["C072", "C073", "C075", "C076", "C077", "C078", "C079"],
         help="Experiment ID to run.",
     )
     parser.add_argument("--out", required=True, help="Artifact directory. The experiment writes a sibling .zip.")
@@ -48,6 +49,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c077_slash_fraction_guard_abstention.run(forwarded)
     if args.id == "C078":
         return c078_quantized_8b_awq_feasibility.run(forwarded)
+    if args.id == "C079":
+        return c079_qwen3_8b_awq_float16_unblock.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 

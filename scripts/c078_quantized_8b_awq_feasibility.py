@@ -19,6 +19,7 @@ DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C078_artifacts"
 MODEL_ID = "Qwen/Qwen3-8B-AWQ"
 QUANTIZATION = "AWQ"
 SOURCE_EXPERIMENT_ID = "C073"
+RUNNER_SCRIPT = "scripts/c078_quantized_8b_awq_feasibility.py"
 
 
 def artifact_paths(out_dir: Path) -> dict[str, Path]:
@@ -187,15 +188,15 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
     examples = issue_examples(Path(metrics.get("outputs_path") or ""))
 
     lines = [
-        "# C078 Qwen3-8B-AWQ Quantized Feasibility Report",
+        f"# {EXPERIMENT_ID} Qwen3-8B-AWQ Quantized Feasibility Report",
         "",
         "## Objective",
-        "- ID: C078",
+        f"- ID: {EXPERIMENT_ID}",
         "- Mechanism: switch only the model path to `Qwen/Qwen3-8B-AWQ` with AWQ quantization.",
         "- Leaderboard submission: NO.",
         "",
         "## Commands/config",
-        f"- wrapper command: `python scripts/c078_quantized_8b_awq_feasibility.py --out {args.out}`",
+        f"- wrapper command: `python {RUNNER_SCRIPT} --out {args.out}`",
         f"- sample source: `{args.sample_source}`",
         f"- sample size: `{args.sample_size}`",
         f"- model id: `{MODEL_ID}`",
