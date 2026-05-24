@@ -21,6 +21,7 @@ EXPERIMENT_ID = "C083"
 EXPERIMENT_SLUG = "C083_qwen3_8b_expression_substitution_guard"
 DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C083_artifacts"
 SOURCE_EXPERIMENT_ID = "C082"
+RUNNER_SCRIPT = "scripts/c083_qwen3_8b_expression_substitution_guard.py"
 NUMBER_RE = r"[+-]?\d+(?:[,.]\d+)?"
 
 
@@ -300,7 +301,7 @@ def decision_recommendation(metrics: dict[str, Any], dry_run: bool) -> tuple[str
     guard_stats = metrics.get("deterministic_guard") or {}
     projected = rates.get("projected_total_4000_min")
     if metrics.get("status") != "completed":
-        return "INVESTIGATE", "The C083 runner did not complete."
+        return "INVESTIGATE", f"The {EXPERIMENT_ID} runner did not complete."
     if validity.get("one_answer_per_input") is not True or validity.get("thinking_trace_rows") or validity.get("empty_answer_rows"):
         return "KILL", "Basic validity failed after expression-substitution guard application."
     if isinstance(projected, (int, float)) and projected >= 12:
@@ -319,15 +320,15 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
     projected = rates.get("projected_total_4000_min")
     projected_text = f"{projected:.2f}" if isinstance(projected, (int, float)) else "n/a"
     lines = [
-        "# C083 Qwen3-8B-AWQ Expression Substitution Guard Report",
+        f"# {EXPERIMENT_ID} Qwen3-8B-AWQ Expression Substitution Guard Report",
         "",
         "## Objective",
-        "- ID: C083",
+        f"- ID: {EXPERIMENT_ID}",
         "- Mechanism: high-confidence deterministic expression-substitution guard on top of unchanged C082.",
         "- Leaderboard submission: NO.",
         "",
         "## Commands/config",
-        f"- wrapper command: `python scripts/c083_qwen3_8b_expression_substitution_guard.py --out {args.out}`",
+        f"- wrapper command: `python {RUNNER_SCRIPT} --out {args.out}`",
         f"- sample source: `{args.sample_source}`",
         f"- sample size: `{args.sample_size}`",
         f"- dry run: `{dry_run}`",
@@ -353,8 +354,8 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
         f"- corrected known C082 miss: `{guard_stats.get('corrected_known_misses', {})}`",
         "",
         "## Remaining Known Risk",
-        "- C083 does not address English final-answer language leakage such as row 4242.",
-        "- C083 does not address open-ended reasoning, geometry, chemistry, or essay quality.",
+        f"- {EXPERIMENT_ID} does not address English final-answer language leakage such as row 4242.",
+        f"- {EXPERIMENT_ID} does not address open-ended reasoning, geometry, chemistry, or essay quality.",
         "- Offline packaging was not performed by this runner.",
         "",
         "## Artifact Layout",
