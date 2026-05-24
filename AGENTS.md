@@ -28,10 +28,10 @@ C010 long global system prompt is killed. Do not use it in future probes.
 
 ## Current Active Experiment
 
-C071 L4 vLLM model probe.
+C072 Qwen3-4B output control.
 
 Goal:
-Measure whether `Qwen/Qwen3-4B-Instruct-2507` can run on Colab Pro+ L4 with vLLM and improve qualitatively over C000.
+Measure whether output length control for `Qwen/Qwen3-4B-Instruct-2507` reduces truncation and repetition risk while preserving the C071 L4 runtime feasibility signal.
 
 Rules:
 - no leaderboard submission;
@@ -43,8 +43,8 @@ Rules:
 - no deterministic handlers;
 - no SFT/LoRA;
 - no model larger than 4B-5B;
-- test Qwen3-4B first;
-- test Qwen3-1.7B only if Qwen3-4B is blocked, unsafe, or too slow.
+- use Qwen3-4B only unless explicitly redirected;
+- test output-control changes only; do not add prompt, router, retrieval, cache, deterministic handlers, SFT, or LoRA in C072.
 
 ## Workflow Reference v4 Distillation
 
@@ -68,10 +68,9 @@ Before Colab:
 
 In Colab:
 - clone or pull the repo;
-- mount Google Drive for result persistence;
 - run committed scripts;
-- save outputs under `results/<experiment_id>/`;
-- zip the result folder to Drive.
+- save outputs under `results/<experiment_id>/` or the experiment artifact root;
+- zip the result folder for download.
 
 After Colab:
 - user downloads zip;
@@ -87,6 +86,31 @@ Every experiment writes:
 For C071, use:
 - `results/C071_l4_vllm_model_probe/`
 - `reports/C071_l4_vllm_model_probe_report.md`
+
+For C072 CLI artifacts, use the packaged artifact root:
+- `reports/C072_qwen3_4b_output_control_report.md`
+- `results/C072/*.summary.json`
+- `results/C072/*.metrics.json`
+- `results/C072/*.outputs.jsonl`
+- `logs/C072/*.log`
+
+The Colab CLI entrypoint is:
+
+```bash
+python scripts/run_experiment.py --id C072 --out /content/C072_artifacts
+```
+
+It must produce:
+
+```text
+/content/C072_artifacts.zip
+```
+
+The per-experiment equivalent is:
+
+```bash
+python scripts/c072_output_control.py --out /content/C072_artifacts
+```
 
 Reports must include:
 - environment;

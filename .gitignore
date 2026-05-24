@@ -12,6 +12,9 @@ __pycache__/
 baseline_submission.zip
 *.zip
 results/
+logs/
+artifacts/tmp/
+reports/tmp/
 
 # Model weights must be downloaded in Colab/runtime, not committed.
 simple_solution/weights/
