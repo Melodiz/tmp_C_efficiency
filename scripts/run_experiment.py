@@ -16,6 +16,7 @@ import c082_qwen3_8b_language_preserving_prefix
 import c083_qwen3_8b_expression_substitution_guard
 import c084_c083_hard_audit_validation
 import c085_c084_max_tokens_384
+import c086_c084_repetition_list_dedup
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -23,7 +24,22 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--id",
         required=True,
-        choices=["C072", "C073", "C075", "C076", "C077", "C078", "C079", "C080", "C081", "C082", "C083", "C084", "C085"],
+        choices=[
+            "C072",
+            "C073",
+            "C075",
+            "C076",
+            "C077",
+            "C078",
+            "C079",
+            "C080",
+            "C081",
+            "C082",
+            "C083",
+            "C084",
+            "C085",
+            "C086",
+        ],
         help="Experiment ID to run.",
     )
     parser.add_argument("--out", required=True, help="Artifact directory. The experiment writes a sibling .zip.")
@@ -69,6 +85,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c084_c083_hard_audit_validation.run(forwarded)
     if args.id == "C085":
         return c085_c084_max_tokens_384.run(forwarded)
+    if args.id == "C086":
+        return c086_c084_repetition_list_dedup.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
