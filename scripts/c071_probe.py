@@ -304,6 +304,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
             "max_model_len": args.max_model_len,
             "max_tokens": args.max_tokens,
             "temperature": args.temperature,
+            "top_p": args.top_p,
             "top_k": args.top_k,
             "dtype": args.dtype,
             "quantization": getattr(args, "quantization", None),
@@ -372,6 +373,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
         sampling = SamplingParams(
             temperature=args.temperature,
             max_tokens=args.max_tokens,
+            top_p=args.top_p,
             top_k=args.top_k,
         )
 
@@ -485,6 +487,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-model-len", type=int, default=4096)
     parser.add_argument("--max-tokens", type=int, default=384)
     parser.add_argument("--temperature", type=float, default=0.0)
+    parser.add_argument("--top-p", type=float, default=1.0)
     parser.add_argument("--top-k", type=int, default=-1)
     parser.add_argument("--dtype", default="bfloat16")
     parser.add_argument("--quantization", default=None, help="Optional vLLM quantization mode, for example AWQ.")

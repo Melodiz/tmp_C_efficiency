@@ -20,6 +20,8 @@ MODEL_ID = "Qwen/Qwen3-8B-AWQ"
 QUANTIZATION = "AWQ"
 SOURCE_EXPERIMENT_ID = "C073"
 RUNNER_SCRIPT = "scripts/c078_quantized_8b_awq_feasibility.py"
+SAMPLING_CHANGED_FROM_C073 = False
+MECHANISM_DESCRIPTION = "switch only the model path to `Qwen/Qwen3-8B-AWQ` with AWQ quantization."
 
 
 def artifact_paths(out_dir: Path) -> dict[str, Path]:
@@ -138,7 +140,7 @@ def write_c078_summary_fields(summary: dict[str, Any], paths: dict[str, Path], a
             "source_c073_variant": "short_prefix_320",
             "model_changed_from_c073": True,
             "quantization": args.quantization,
-            "model_prompt_sampling_changed_from_c073": False,
+            "model_prompt_sampling_changed_from_c073": SAMPLING_CHANGED_FROM_C073,
             "short_user_prefix": c073.SHORT_USER_PREFIX,
             "system_prompt": False,
             "deterministic_guard_retrieval_cache_rag_sft_lora": False,
@@ -192,7 +194,7 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
         "",
         "## Objective",
         f"- ID: {EXPERIMENT_ID}",
-        "- Mechanism: switch only the model path to `Qwen/Qwen3-8B-AWQ` with AWQ quantization.",
+        f"- Mechanism: {MECHANISM_DESCRIPTION}",
         "- Leaderboard submission: NO.",
         "",
         "## Commands/config",
@@ -203,7 +205,7 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
         f"- quantization: `{args.quantization}`",
         f"- max tokens: `{args.max_tokens}`",
         f"- max model len: `{args.max_model_len}`",
-        f"- temperature/top_k: `{args.temperature}` / `{args.top_k}`",
+        f"- temperature/top_p/top_k: `{args.temperature}` / `{args.top_p}` / `{args.top_k}`",
         f"- dry run: `{dry_run}`",
         f"- short user prefix: `{c073.SHORT_USER_PREFIX}`",
         "- forbidden methods: no deterministic guard, retrieval/RAG, cache, SFT, LoRA, system prompt, or new prompt text.",
@@ -305,6 +307,7 @@ def create_dry_run_artifacts(paths: dict[str, Path], args: argparse.Namespace) -
             "max_model_len": args.max_model_len,
             "max_tokens": args.max_tokens,
             "temperature": args.temperature,
+            "top_p": args.top_p,
             "top_k": args.top_k,
             "dtype": args.dtype,
             "quantization": args.quantization,
@@ -350,6 +353,7 @@ def create_gpu_artifacts(paths: dict[str, Path], args: argparse.Namespace) -> di
         max_model_len=args.max_model_len,
         max_tokens=args.max_tokens,
         temperature=args.temperature,
+        top_p=args.top_p,
         top_k=args.top_k,
         dtype=args.dtype,
         quantization=args.quantization,
@@ -405,6 +409,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--max-model-len", type=int, default=4096)
     parser.add_argument("--max-tokens", type=int, default=320)
     parser.add_argument("--temperature", type=float, default=0.0)
+    parser.add_argument("--top-p", type=float, default=1.0)
     parser.add_argument("--top-k", type=int, default=-1)
     parser.add_argument("--dtype", default="bfloat16")
     parser.add_argument("--quantization", default=QUANTIZATION)
