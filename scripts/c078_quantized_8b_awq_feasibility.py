@@ -22,6 +22,10 @@ SOURCE_EXPERIMENT_ID = "C073"
 RUNNER_SCRIPT = "scripts/c078_quantized_8b_awq_feasibility.py"
 SAMPLING_CHANGED_FROM_C073 = False
 MECHANISM_DESCRIPTION = "switch only the model path to `Qwen/Qwen3-8B-AWQ` with AWQ quantization."
+MODEL_CHANGE_SOURCE = "C073_short_prefix_320"
+FORBIDDEN_METHODS_DESCRIPTION = (
+    "no deterministic guard, retrieval/RAG, cache, SFT, LoRA, system prompt, or new prompt text."
+)
 
 
 def artifact_paths(out_dir: Path) -> dict[str, Path]:
@@ -71,7 +75,7 @@ def build_metrics(summary: dict[str, Any], paths: dict[str, Path]) -> dict[str, 
         "outputs_path": str(paths["outputs"]),
         "log_path": str(paths["log"]),
         "model_change": {
-            "source": "C073_short_prefix_320",
+            "source": MODEL_CHANGE_SOURCE,
             "model_ref": MODEL_ID,
             "quantization": QUANTIZATION,
             "only_mechanism_change": True,
@@ -208,7 +212,7 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
         f"- temperature/top_p/top_k: `{args.temperature}` / `{args.top_p}` / `{args.top_k}`",
         f"- dry run: `{dry_run}`",
         f"- short user prefix: `{c073.SHORT_USER_PREFIX}`",
-        "- forbidden methods: no deterministic guard, retrieval/RAG, cache, SFT, LoRA, system prompt, or new prompt text.",
+        f"- forbidden methods: {FORBIDDEN_METHODS_DESCRIPTION}",
         "",
         "## Environment",
     ]

@@ -12,6 +12,7 @@ import c078_quantized_8b_awq_feasibility
 import c079_qwen3_8b_awq_float16_unblock
 import c080_qwen3_8b_awq_marlin
 import c081_qwen3_8b_recommended_sampling
+import c082_qwen3_8b_language_preserving_prefix
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -19,7 +20,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--id",
         required=True,
-        choices=["C072", "C073", "C075", "C076", "C077", "C078", "C079", "C080", "C081"],
+        choices=["C072", "C073", "C075", "C076", "C077", "C078", "C079", "C080", "C081", "C082"],
         help="Experiment ID to run.",
     )
     parser.add_argument("--out", required=True, help="Artifact directory. The experiment writes a sibling .zip.")
@@ -57,6 +58,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c080_qwen3_8b_awq_marlin.run(forwarded)
     if args.id == "C081":
         return c081_qwen3_8b_recommended_sampling.run(forwarded)
+    if args.id == "C082":
+        return c082_qwen3_8b_language_preserving_prefix.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
