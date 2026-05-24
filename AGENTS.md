@@ -2,9 +2,9 @@
 
 ## Role
 
-This is the Task C implementation repository. It contains runnable code, data access, packaging, GPU experiments, and reports returned to the Meta-Orchestrator.
+This is the Task C implementation repository inside the unified AutoResearch workspace.
 
-The Meta-Orchestrator repo is separate. This repo executes experiments and returns structured reports.
+The controller one level up owns memory, experiment queue, Colab launching, and decisions. This repo owns runnable code, artifact-producing experiment scripts, packaging helpers, and reports.
 
 ## Current Best
 
@@ -16,114 +16,93 @@ The Meta-Orchestrator repo is separate. This repo executes experiments and retur
 - Submission zip < 10 GB.
 - Docker image < 20 GB.
 
+## Current Active Work
+
+C074 unblocks C073.
+
+The required implementation outcome is:
+
+```bash
+python scripts/run_experiment.py --id C073 --out /content/C073_artifacts
+```
+
+or an equivalent:
+
+```bash
+python scripts/c073_short_prefix_output_control.py --out /content/C073_artifacts
+```
+
+The runner must produce:
+
+```text
+/content/C073_artifacts.zip
+  reports/C073_qwen3_4b_short_prefix_output_control_report.md
+  results/C073/*.summary.json
+  results/C073/*.metrics.json
+  results/C073/*.outputs.jsonl
+  logs/C073/*.log
+```
+
+## C073 Mechanism
+
+Run Qwen3-4B-Instruct-2507 with the same C071/C072 L4/vLLM setup, but prepend exactly one short instruction inside the user message:
+
+```text
+Ответь кратко и точно. Не повторяй условие. В конце дай итоговый ответ.
+```
+
+Run `short_prefix_320` first. Optionally run `short_prefix_384` only if 320 improves cap-hit rate but appears clipped.
+
 ## Hard Boundaries
 
-Do not submit to leaderboard unless the active prompt explicitly authorizes it.
+Do not submit to leaderboard unless the controller explicitly reaches a `SUBMIT` decision and the user confirms.
 
-Do not mix mechanisms unless explicitly authorized. One experiment should test one mechanism.
+Do not mix mechanisms unless explicitly authorized. C073 is only short user-prefix output control.
 
-Do not silently keep failed experiment changes. If an experiment is killed, reset or disable its behavior before the next experiment.
+Forbidden in C073/C074:
 
-C010 long global system prompt is killed. Do not use it in future probes.
-
-## Current Active Experiment
-
-C072 Qwen3-4B output control.
-
-Goal:
-Measure whether output length control for `Qwen/Qwen3-4B-Instruct-2507` reduces truncation and repetition risk while preserving the C071 L4 runtime feasibility signal.
-
-Rules:
 - no leaderboard submission;
 - no system prompt;
-- user-message-only prompt shape;
+- no long prompt or numbered rule list;
 - no router;
 - no retrieval;
 - no exact cache;
 - no deterministic handlers;
 - no SFT/LoRA;
-- no model larger than 4B-5B;
-- use Qwen3-4B only unless explicitly redirected;
-- test output-control changes only; do not add prompt, router, retrieval, cache, deterministic handlers, SFT, or LoRA in C072.
+- no packaging build;
+- no unrelated refactor.
 
-## Workflow Reference v4 Distillation
-
-Use the Colab loop:
-
-1. Codex implements `.py` files and thin Colab cells.
-2. User runs cells in Colab.
-3. If a cell fails, user pastes error back to Codex.
-4. Codex fixes code and updates cells.
-5. Colab saves result artifacts as a zip.
-6. User downloads zip and places it back in this repo.
-7. Codex unzips, reviews outputs, writes complete report, and cleans temporary files.
-
-Notebook cells should be thin wrappers around committed Python files. Do not put substantial experiment logic only in notebook cells.
+C010 long global system prompt is killed. Do not use it.
 
 ## Git / Colab Sync
 
 Before Colab:
+
 - commit all files needed by Colab;
 - push to the remote repo.
 
 In Colab:
-- clone or pull the repo;
-- run committed scripts;
-- save outputs under `results/<experiment_id>/` or the experiment artifact root;
-- zip the result folder for download.
 
-After Colab:
-- user downloads zip;
-- user places zip in this repo;
-- Codex unzips and writes final report.
+- clone the repo;
+- run committed scripts;
+- save outputs under the requested artifact root;
+- zip the artifact folder for download.
 
 ## Result Discipline
 
-Every experiment writes:
-- result artifacts under `results/<experiment_id>/`;
-- report under `reports/<experiment_id>_report.md`.
-
-For C071, use:
-- `results/C071_l4_vllm_model_probe/`
-- `reports/C071_l4_vllm_model_probe_report.md`
-
-For C072 CLI artifacts, use the packaged artifact root:
-- `reports/C072_qwen3_4b_output_control_report.md`
-- `results/C072/*.summary.json`
-- `results/C072/*.metrics.json`
-- `results/C072/*.outputs.jsonl`
-- `logs/C072/*.log`
-
-The Colab CLI entrypoint is:
-
-```bash
-python scripts/run_experiment.py --id C072 --out /content/C072_artifacts
-```
-
-It must produce:
-
-```text
-/content/C072_artifacts.zip
-```
-
-The per-experiment equivalent is:
-
-```bash
-python scripts/c072_output_control.py --out /content/C072_artifacts
-```
-
 Reports must include:
+
 - environment;
 - exact commands/config;
 - runtime measurements;
 - output validity;
+- cap hits and repetition suspects;
+- comparison to C071 raw 384 and C072 cap-only 320;
 - qualitative examples;
-- package feasibility;
 - recommendation;
 - strongest reason against recommendation.
 
 ## Cleanup
 
-Do not delete user data. Move obsolete temporary files to an archive folder or leave them for user confirmation.
+Do not delete user data. Do not commit large model weights, raw data, old artifact zips, or credentials.
 
-Do not commit large model weights unless the active prompt explicitly asks for packaging/submission work.

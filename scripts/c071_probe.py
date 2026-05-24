@@ -218,8 +218,10 @@ def apply_user_only_template(
     tokenizer: Any,
     question: str,
     enable_thinking_false: bool,
+    user_prefix: str | None = None,
 ) -> str:
-    messages = [{"role": "user", "content": question}]
+    user_content = f"{user_prefix}\n\n{question}" if user_prefix else question
+    messages = [{"role": "user", "content": user_content}]
     kwargs: dict[str, Any] = {
         "tokenize": False,
         "add_generation_prompt": True,
@@ -307,6 +309,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
             "gpu_memory_utilization": args.gpu_memory_utilization,
             "seed": args.seed,
             "user_message_only": True,
+            "user_prefix": args.user_prefix,
             "enable_thinking_false_in_template": not args.no_enable_thinking_false,
             "router_retrieval_cache_handlers_sft_lora": False,
         },
@@ -342,6 +345,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
                 tokenizer,
                 str(row["question"]),
                 enable_thinking_false=not args.no_enable_thinking_false,
+                user_prefix=args.user_prefix,
             )
             for row in sample_rows
         ]
@@ -483,6 +487,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--trust-remote-code", action="store_true")
     parser.add_argument("--no-enable-thinking-false", action="store_true")
+    parser.add_argument("--user-prefix", default=None, help="Optional prefix prepended inside each user message.")
     parser.add_argument("--skip-hf-metadata", action="store_true")
     parser.add_argument("--save-prompts", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
