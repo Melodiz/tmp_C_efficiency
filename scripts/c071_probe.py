@@ -306,6 +306,7 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
             "temperature": args.temperature,
             "top_k": args.top_k,
             "dtype": args.dtype,
+            "quantization": getattr(args, "quantization", None),
             "gpu_memory_utilization": args.gpu_memory_utilization,
             "seed": args.seed,
             "user_message_only": True,
@@ -353,15 +354,19 @@ def run_probe(args: argparse.Namespace) -> dict[str, Any]:
 
         sampler.start()
         startup_t0 = time.perf_counter()
-        llm = LLM(
-            model=model_ref,
-            dtype=args.dtype,
-            max_model_len=args.max_model_len,
-            gpu_memory_utilization=args.gpu_memory_utilization,
-            tokenizer_mode="auto",
-            seed=args.seed,
-            trust_remote_code=args.trust_remote_code,
-        )
+        llm_kwargs = {
+            "model": model_ref,
+            "dtype": args.dtype,
+            "max_model_len": args.max_model_len,
+            "gpu_memory_utilization": args.gpu_memory_utilization,
+            "tokenizer_mode": "auto",
+            "seed": args.seed,
+            "trust_remote_code": args.trust_remote_code,
+        }
+        quantization = getattr(args, "quantization", None)
+        if quantization:
+            llm_kwargs["quantization"] = quantization
+        llm = LLM(**llm_kwargs)
         startup_s = time.perf_counter() - startup_t0
 
         sampling = SamplingParams(
@@ -482,6 +487,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top-k", type=int, default=-1)
     parser.add_argument("--dtype", default="bfloat16")
+    parser.add_argument("--quantization", default=None, help="Optional vLLM quantization mode, for example AWQ.")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.9)
     parser.add_argument("--gpu-sample-interval", type=float, default=0.5)
     parser.add_argument("--seed", type=int, default=0)
