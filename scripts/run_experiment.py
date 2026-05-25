@@ -19,6 +19,7 @@ import c085_c084_max_tokens_384
 import c086_c084_repetition_list_dedup
 import c087_c086_locked_val_validation
 import c088_simple_solution_candidate_smoke
+import c089_english_final_answer_cleanup
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -43,6 +44,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C086",
             "C087",
             "C088",
+            "C089",
         ],
         help="Experiment ID to run.",
     )
@@ -95,6 +97,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c087_c086_locked_val_validation.run(forwarded)
     if args.id == "C088":
         return c088_simple_solution_candidate_smoke.run(forwarded)
+    if args.id == "C089":
+        return c089_english_final_answer_cleanup.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
