@@ -8,71 +8,75 @@ The controller one level up owns memory, experiment queue, Colab launching, and 
 
 ## Current Best
 
-- C000 baseline public score: 46.00.
-- Verdict: OK.
-- Baseline model: `Qwen/Qwen3-0.6B`.
+- C111 public score: 74.70.
+- Current unsubmitted candidate: C125 exact-stack zip, built from commit `f1d5f80`.
+- Current implementation path: `Qwen/Qwen3-8B-AWQ` with vLLM `0.11.0`, `awq_marlin`, greedy decoding, short language-preserving prefix, and strict exact/task postprocessors through C125.
 - Runtime target: 4000 questions under 15 minutes on one NVIDIA L4.
-- Final container has no internet.
+- Final container dependency policy is controlled by the submission Dockerfile; do not assume extra packages exist unless the experiment smoke installs or packages them.
 - Submission zip < 10 GB.
 - Docker image < 20 GB.
 
 ## Current Active Work
 
-C074 unblocks C073.
+C131 tests one new mechanism: strict Russian morphology/grammar templates using `pymorphy3`.
 
 The required implementation outcome is:
 
 ```bash
-python scripts/run_experiment.py --id C073 --out /content/C073_artifacts
+python scripts/run_experiment.py --id C131 --out /content/C131_artifacts
 ```
 
 or an equivalent:
 
 ```bash
-python scripts/c073_short_prefix_output_control.py --out /content/C073_artifacts
+python scripts/c131_russian_morph_grammar_final_smoke.py --out /content/C131_artifacts
 ```
 
 The runner must produce:
 
 ```text
-/content/C073_artifacts.zip
-  reports/C073_qwen3_4b_short_prefix_output_control_report.md
-  results/C073/*.summary.json
-  results/C073/*.metrics.json
-  results/C073/*.outputs.jsonl
-  logs/C073/*.log
+/content/C131_artifacts.zip
+  reports/C131_russian_morph_grammar_final_smoke_report.md
+  results/C131/*.summary.json
+  results/C131/*.outputs.json
+  logs/C131/*.log
 ```
 
-## C073 Mechanism
+## C131 Mechanism
 
-Run Qwen3-4B-Instruct-2507 with the same C071/C072 L4/vLLM setup, but prepend exactly one short instruction inside the user message:
+Keep the C125 model/prompt/exact stack unchanged. Add only a strict Russian morphology/grammar template solver that uses `pymorphy3` when available and otherwise abstains.
 
-```text
-Ответь кратко и точно. Не повторяй условие. В конце дай итоговый ответ.
-```
+Allowed C131 templates:
+- no-context case questions should answer that context is required;
+- high-confidence phrase connection types;
+- imperative one-member sentence type;
+- single-word morphology with ambiguity abstention;
+- simple part-of-speech tagging.
 
-Run `short_prefix_320` first. Optionally run `short_prefix_384` only if 320 improves cap-hit rate but appears clipped.
+Rejected C131 templates:
+- morphemic composition;
+- full syntax parsing;
+- sentence/essay/list generation;
+- retrieval/RAG;
+- any new arithmetic, physics, chemistry, or prompt changes.
 
 ## Hard Boundaries
 
 Do not submit to leaderboard unless the controller explicitly reaches a `SUBMIT` decision and the user confirms.
 
-Do not mix mechanisms unless explicitly authorized. C073 is only short user-prefix output control.
+Do not mix mechanisms unless explicitly authorized. C131 is only the Russian morphology/grammar template solver.
 
-Forbidden in C073/C074:
+Forbidden in C131:
 
 - no leaderboard submission;
-- no system prompt;
-- no long prompt or numbered rule list;
-- no router;
-- no retrieval;
-- no exact cache;
-- no deterministic handlers;
+- no prompt/model/sampling/cap changes;
+- no retrieval/RAG;
+- no exact-cache changes;
+- no morphemic parser or full syntax parser;
 - no SFT/LoRA;
-- no packaging build;
 - no unrelated refactor.
 
-C010 long global system prompt is killed. Do not use it.
+C126 already flagged the C125 zip for human review. Do not auto-submit or stop just because a candidate exists.
 
 ## Git / Colab Sync
 
@@ -96,8 +100,9 @@ Reports must include:
 - exact commands/config;
 - runtime measurements;
 - output validity;
-- cap hits and repetition suspects;
-- comparison to C071 raw 384 and C072 cap-only 320;
+- smoke checks;
+- dependency/package notes for `pymorphy3`;
+- comparison to C125/C130 evidence;
 - qualitative examples;
 - recommendation;
 - strongest reason against recommendation.
@@ -105,4 +110,3 @@ Reports must include:
 ## Cleanup
 
 Do not delete user data. Do not commit large model weights, raw data, old artifact zips, or credentials.
-
