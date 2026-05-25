@@ -92,7 +92,8 @@ def install_training_deps() -> str:
             "install",
             "--quiet",
             "peft==0.17.1",
-            "bitsandbytes==0.47.0",
+            "--upgrade",
+            "bitsandbytes",
             "accelerate==1.10.1",
         ]
     )
