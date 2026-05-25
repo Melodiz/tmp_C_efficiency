@@ -49,6 +49,7 @@ import c135_calculator_written_arithmetic_final_smoke
 import c140_algebra_equation_final_smoke
 import c146_qwen3_8b_fp8_feasibility
 import c152_selective_retry
+import c156_geometry_exact_final_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -103,6 +104,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C140",
             "C146",
             "C152",
+            "C156",
         ],
         help="Experiment ID to run.",
     )
@@ -215,6 +217,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c146_qwen3_8b_fp8_feasibility.run(forwarded)
     if args.id == "C152":
         return c152_selective_retry.run(forwarded)
+    if args.id == "C156":
+        return c156_geometry_exact_final_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
