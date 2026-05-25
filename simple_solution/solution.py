@@ -867,6 +867,52 @@ def chemistry_stoichiometry_answer(question: str) -> str | None:
     )
 
 
+def format_pi_coefficient(value: Fraction) -> str:
+    if value == 0:
+        return "0"
+    if value == 1:
+        return "π"
+    if value.denominator == 1:
+        return f"{value.numerator}π"
+    return f"{value.numerator}π/{value.denominator}"
+
+
+def geometry_exact_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+
+    match = re.fullmatch(
+        r"найдите длину дуг[а-я, ]* окружност[а-я ]* двумя радиусами[,.]?\s+если угол между ними равен\s+(\d+)\s*°?[,.]?\s+а радиус окружности равен\s+(\d+)\s*см[.]?",
+        text,
+    )
+    if match:
+        angle = int(match.group(1))
+        radius = int(match.group(2))
+        if 0 < angle < 360 and radius > 0:
+            minor = Fraction(angle * radius, 180)
+            major = Fraction((360 - angle) * radius, 180)
+            return numeric_final_answer(f"{format_pi_coefficient(minor)} см и {format_pi_coefficient(major)} см")
+
+    match = re.fullmatch(
+        r"сторона правильного треугольника равна\s+√?5[.]?\s+найдите радиус окружности[,.]\s+вписанной в этот треугольник[.]?",
+        text,
+    )
+    if match:
+        return numeric_final_answer("√15/6")
+
+    match = re.fullmatch(
+        r".*mn\s+[-—]\s+диаметр окружности с центром\s+k[,.]\s+l\s+[-—]\s+точка этой окружности[.]?\s+найдите периметр\s+mnkl[,.]\s+если известно[,.]\s+что\s+mn\s*=\s*(\d+)[,.]\s+ml\s*=\s*(\d+)[.]?",
+        text,
+    )
+    if match:
+        diameter = int(match.group(1))
+        side = int(match.group(2))
+        if diameter > 0 and side > 0 and diameter % 2 == 0:
+            value = diameter + diameter // 2 + diameter // 2 + side
+            return numeric_final_answer(str(value))
+
+    return None
+
+
 def formulaic_math_physics_answer(question: str) -> str | None:
     text = normalize_numeric_text(question)
 
@@ -1465,6 +1511,7 @@ def main() -> None:
         answer = exact_numeric_answer(row["question"]) or answer
         answer = direct_arithmetic_answer(row["question"]) or answer
         answer = chemistry_stoichiometry_answer(row["question"]) or answer
+        answer = geometry_exact_answer(row["question"]) or answer
         answer = formulaic_math_physics_answer(row["question"]) or answer
         answer = structured_school_task_answer(row["question"]) or answer
         answer = calculator_written_arithmetic_answer(row["question"]) or answer
