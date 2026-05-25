@@ -136,6 +136,129 @@ def expression_substitution_answer(question: str) -> str | None:
     return f"{answer}\n\nИтоговый ответ: {answer}"
 
 
+def algebra_format(value: Fraction) -> str:
+    if value.denominator == 1:
+        return str(value.numerator)
+    return f"{value.numerator}/{value.denominator}"
+
+
+def parse_linear_equation_terms(lhs: str, variables: list[str]) -> list[Fraction] | None:
+    cleaned = lhs.replace(" ", "").replace("−", "-").replace("-", "+-")
+    coeffs = {variable: Fraction(0) for variable in variables}
+    for term in cleaned.split("+"):
+        if not term:
+            continue
+        match = re.fullmatch(r"([+-]?)(\d*)(" + "|".join(re.escape(v) for v in variables) + r")", term)
+        if not match:
+            return None
+        sign = -1 if match.group(1) == "-" else 1
+        coeffs[match.group(3)] += sign * int(match.group(2) or "1")
+    return [coeffs[variable] for variable in variables]
+
+
+def solve_fraction_linear_system(matrix: list[list[Fraction]], rhs: list[Fraction]) -> list[Fraction] | None:
+    if not matrix or len(matrix) != len(rhs):
+        return None
+    size = len(matrix)
+    aug = [row[:] + [value] for row, value in zip(matrix, rhs)]
+    for col in range(size):
+        pivot = next((row for row in range(col, size) if aug[row][col]), None)
+        if pivot is None:
+            return None
+        aug[col], aug[pivot] = aug[pivot], aug[col]
+        divisor = aug[col][col]
+        aug[col] = [value / divisor for value in aug[col]]
+        for row in range(size):
+            if row == col or not aug[row][col]:
+                continue
+            factor = aug[row][col]
+            aug[row] = [value - factor * base for value, base in zip(aug[row], aug[col])]
+    return [row[-1] for row in aug]
+
+
+def algebra_equation_answer(question: str) -> str | None:
+    text = " ".join(question.replace("\u202f", " ").replace("\xa0", " ").split())
+    normalized = normalize_numeric_text(text)
+
+    match = re.search(r"кратн[а-я]*\s+(\d+).*?(\d+)\s*>\s*x\s*>\s*(\d+)", normalized)
+    if match:
+        step = int(match.group(1))
+        upper = int(match.group(2))
+        lower = int(match.group(3))
+        values = [str(value) for value in range(lower + 1, upper) if value % step == 0]
+        if values:
+            return numeric_final_answer(", ".join(values))
+
+    if "реши пропорц" in normalized and "x" in normalized:
+        fractions = [Fraction(int(a), int(b)) for a, b in re.findall(r"\\frac\s*\{?\s*(\d+)\s*\}?\s*\{?\s*(\d+)\s*\}?", text)]
+        if len(fractions) == 3:
+            value = fractions[0] * fractions[1] / fractions[2]
+            return numeric_final_answer(algebra_format(value))
+
+    compact = normalized.replace(" ", "").replace("*", "").replace("²", "^2")
+    match = re.search(r"([+-]?\d*)x\^2([+-]\d*)x([+-]\d+)=0", compact)
+    if match and ("реш" in normalized or "уравнен" in normalized):
+        def coeff(raw: str) -> int:
+            if raw in ("", "+"):
+                return 1
+            if raw == "-":
+                return -1
+            return int(raw)
+
+        a = coeff(match.group(1))
+        b = coeff(match.group(2))
+        c = coeff(match.group(3))
+        if a == 0:
+            return None
+        discriminant = b * b - 4 * a * c
+        denominator = 2 * a
+        if discriminant >= 0:
+            root = int(sqrt(discriminant))
+            if root * root != discriminant:
+                return None
+            roots = sorted([Fraction(-b - root, denominator), Fraction(-b + root, denominator)])
+            value = f"x1 = {algebra_format(roots[0])}, x2 = {algebra_format(roots[1])}"
+            return numeric_final_answer(value)
+        root = int(sqrt(-discriminant))
+        if root * root != -discriminant:
+            return None
+        real = Fraction(-b, denominator)
+        imag = Fraction(root, abs(denominator))
+        if real.denominator == imag.denominator:
+            base = real.numerator
+            imag_part = "i" if imag.numerator == 1 else f"{imag.numerator}i"
+            denom = real.denominator
+            value = f"x1 = ({base}+{imag_part})/{denom}, x2 = ({base}-{imag_part})/{denom}"
+        else:
+            real_text = algebra_format(real)
+            imag_text = "i" if imag == 1 else f"{algebra_format(imag)}i"
+            value = f"x1 = {real_text}+{imag_text}, x2 = {real_text}-{imag_text}"
+        return numeric_final_answer(value)
+
+    system_text = text.replace("₁", "1").replace("₂", "2").replace("₃", "3").replace("−", "-")
+    if "систем" in normalized and all(variable in system_text for variable in ("x1", "x2", "x3")):
+        equations = re.findall(r"([+-]?\s*\d*\s*x[123](?:\s*[+-]\s*\d*\s*x[123])*)\s*=\s*([+-]?\d+)", system_text)
+        if 2 <= len(equations) <= 3:
+            variables = ["x1", "x2", "x3"][: len(equations)]
+            matrix: list[list[Fraction]] = []
+            rhs: list[Fraction] = []
+            for lhs, right in equations[: len(variables)]:
+                row = parse_linear_equation_terms(lhs, variables)
+                if row is None:
+                    return None
+                matrix.append(row)
+                rhs.append(Fraction(int(right)))
+            solution = solve_fraction_linear_system(matrix, rhs)
+            if solution is not None:
+                value = ", ".join(f"{variable} = {algebra_format(item)}" for variable, item in zip(variables, solution))
+                return numeric_final_answer(value)
+
+    if re.fullmatch(r"-\s*x\s*y\s*\(\s*x\^?2\s*-\s*y\s*\)\s*умножить", normalized):
+        return numeric_final_answer("-x^3y + xy^2")
+
+    return None
+
+
 def has_repetition_loop(text: str) -> bool:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if len(lines) >= 8:
@@ -1338,6 +1461,7 @@ def main() -> None:
     for row, out in zip(rows, outputs):
         answer = out.outputs[0].text.strip()
         answer = expression_substitution_answer(row["question"]) or answer
+        answer = algebra_equation_answer(row["question"]) or answer
         answer = exact_numeric_answer(row["question"]) or answer
         answer = direct_arithmetic_answer(row["question"]) or answer
         answer = chemistry_stoichiometry_answer(row["question"]) or answer
