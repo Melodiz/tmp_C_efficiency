@@ -1,4 +1,4 @@
-"""C086 candidate: vLLM + Qwen3-8B-AWQ with narrow postprocessing.
+"""C092 candidate: vLLM + Qwen3-8B-AWQ with narrow postprocessing.
 
 Input:  /workspace/input.pickle
 Output: /workspace/output.json
@@ -177,6 +177,41 @@ def dedup_comma_loop(answer: str) -> str | None:
     return f"{first_line}\n\nИтоговый ответ: {answer_list}"
 
 
+def is_english_prompt(question: str) -> bool:
+    latin = len(re.findall(r"[A-Za-z]", question))
+    cyrillic = len(re.findall(r"[А-Яа-яЁё]", question))
+    return latin >= 10 and latin > cyrillic * 2
+
+
+def is_cloze_prompt(question: str) -> bool:
+    text = " ".join(question.split())
+    if "____" in text or "＿" in text:
+        return True
+    if re.search(r"\b[A-Z]{2,}\b\s*(?:[.!?])?$", text):
+        return True
+    if re.search(r"\bchoose\b", text, flags=re.IGNORECASE) and len(text.split()) <= 18:
+        return True
+    return False
+
+
+def cleanup_english_cloze_answer(question: str, answer: str) -> str | None:
+    if not is_english_prompt(question) or not is_cloze_prompt(question):
+        return None
+    if not re.search(r"[А-Яа-яЁё]", answer) or not re.search(r"ответ\s*:", answer, flags=re.IGNORECASE):
+        return None
+
+    before_marker = re.split(r"\*{0,2}\s*Ответ\s*:\s*\*{0,2}", answer, maxsplit=1, flags=re.IGNORECASE)[0]
+    first_lines = [line.strip(" *") for line in before_marker.splitlines() if line.strip(" *")]
+    if len(first_lines) != 1:
+        return None
+    first = first_lines[0].strip()
+    if not re.search(r"[A-Za-z]", first) or re.search(r"[А-Яа-яЁё]", first):
+        return None
+    if len(first.split()) > 5:
+        return None
+    return first
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -216,6 +251,7 @@ def main() -> None:
         answer = out.outputs[0].text.strip()
         answer = expression_substitution_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
+        answer = cleanup_english_cloze_answer(row["question"], answer) or answer
         result.append({"rid": row["rid"], "answer": answer})
 
     with open("output.json", "w") as f:
