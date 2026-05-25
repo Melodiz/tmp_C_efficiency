@@ -14,7 +14,8 @@ import re
 from collections import Counter
 from decimal import Decimal, InvalidOperation
 from fractions import Fraction
-from functools import reduce
+from functools import lru_cache, reduce
+from importlib import import_module
 from math import gcd
 from math import sqrt
 from typing import Any
@@ -983,6 +984,257 @@ def structured_school_task_answer(question: str) -> str | None:
     return None
 
 
+CASE_RU = {
+    "nomn": "именительный",
+    "gent": "родительный",
+    "datv": "дательный",
+    "accs": "винительный",
+    "ablt": "творительный",
+    "loct": "предложный",
+}
+POS_RU = {
+    "NOUN": "существительное",
+    "ADJF": "прилагательное",
+    "ADJS": "краткое прилагательное",
+    "VERB": "глагол",
+    "INFN": "глагол",
+    "PRTF": "причастие",
+    "PRTS": "краткое причастие",
+    "GRND": "деепричастие",
+    "ADVB": "наречие",
+    "PREP": "предлог",
+    "CONJ": "союз",
+    "PRCL": "частица",
+    "NPRO": "местоимение",
+    "NUMR": "числительное",
+}
+GENDER_RU = {"masc": "мужской род", "femn": "женский род", "neut": "средний род"}
+NUMBER_RU = {"sing": "единственное число", "plur": "множественное число"}
+ASPECT_RU = {"perf": "совершенный вид", "impf": "несовершенный вид"}
+TENSE_RU = {"past": "прошедшее время", "pres": "настоящее время", "futr": "будущее время"}
+MOOD_RU = {"indc": "изъявительное наклонение", "impr": "повелительное наклонение"}
+
+
+@lru_cache(maxsize=1)
+def get_morph_analyzer() -> Any | None:
+    try:
+        pymorphy3 = import_module("pymorphy3")
+        return pymorphy3.MorphAnalyzer()
+    except Exception:
+        return None
+
+
+def quoted_text(question: str) -> str | None:
+    match = re.search(r"[«\"]([^»\"]+)[»\"]", question)
+    return match.group(1).strip() if match else None
+
+
+def morph_parse(word: str) -> list[Any]:
+    morph = get_morph_analyzer()
+    if morph is None:
+        return []
+    return morph.parse(word.lower().replace("ё", "ё"))
+
+
+def best_morph(word: str) -> Any | None:
+    parses = morph_parse(word)
+    return parses[0] if parses else None
+
+
+def morph_declension(parse: Any) -> str | None:
+    if "NOUN" not in parse.tag:
+        return None
+    normal = str(parse.normal_form)
+    gender = str(parse.tag.gender)
+    if gender in {"masc", "femn"} and normal.endswith(("а", "я")):
+        return "1-е склонение"
+    if gender == "masc" or gender == "neut":
+        return "2-е склонение"
+    if gender == "femn" and normal.endswith("ь"):
+        return "3-е склонение"
+    return None
+
+
+def parse_score_values(word: str, attr: str) -> dict[str, float]:
+    scores: dict[str, float] = {}
+    for parse in morph_parse(word)[:5]:
+        value = getattr(parse.tag, attr, None)
+        if value:
+            scores[str(value)] = scores.get(str(value), 0.0) + float(parse.score)
+    return scores
+
+
+def dominant_value(word: str, attr: str, threshold: float = 0.45) -> str | None:
+    scores = parse_score_values(word, attr)
+    if not scores:
+        return None
+    value, score = max(scores.items(), key=lambda item: item[1])
+    return value if score >= threshold else None
+
+
+def russian_final_answer(answer: str) -> str:
+    return f"{answer}\n\nИтоговый ответ: {answer}"
+
+
+def simple_word_tokens(text: str) -> list[str]:
+    return re.findall(r"[А-Яа-яЁё-]+", text)
+
+
+def contextless_case_answer(question: str, text: str) -> str | None:
+    word = quoted_text(question)
+    if not word or len(simple_word_tokens(word)) != 1:
+        return None
+    if re.fullmatch(r"определи\s+падеж\s+слова\s+[«\"].+[»\"]", text):
+        answer = f"Без контекста нельзя однозначно определить падеж слова «{word}»."
+        return russian_final_answer(answer)
+    return None
+
+
+def phrase_connection_answer(question: str, text: str) -> str | None:
+    if "тип связи" not in text or "словосочетан" not in text:
+        return None
+    phrase = quoted_text(question)
+    tokens = simple_word_tokens(phrase or "")
+    if len(tokens) != 2:
+        return None
+    first = best_morph(tokens[0].split("-")[0])
+    second = best_morph(tokens[1].split("-")[0])
+    if not first or not second:
+        return None
+    if "ADVB" in second.tag:
+        return russian_final_answer("примыкание")
+    if "VERB" in first.tag and "NOUN" in second.tag:
+        same_gender = first.tag.gender and second.tag.gender and str(first.tag.gender) == str(second.tag.gender)
+        same_number = first.tag.number and second.tag.number and str(first.tag.number) == str(second.tag.number)
+        if same_gender and same_number and str(second.tag.case) == "nomn":
+            return russian_final_answer("согласование")
+    return None
+
+
+def one_part_sentence_answer(question: str, text: str) -> str | None:
+    if "вид односоставного предложения" not in text:
+        return None
+    phrase = quoted_text(question)
+    if not phrase:
+        return None
+    for token in simple_word_tokens(phrase):
+        parse = best_morph(token.split("-")[0])
+        if parse and "VERB" in parse.tag and "impr" in parse.tag:
+            return russian_final_answer("определённо-личное")
+    return None
+
+
+def case_declension_answer(question: str, text: str) -> str | None:
+    if "склонение" not in text or "падеж" not in text:
+        return None
+    word = quoted_text(question)
+    if not word or len(simple_word_tokens(word)) != 1:
+        return None
+    parse = best_morph(word)
+    if not parse or "NOUN" not in parse.tag or not parse.tag.case:
+        return None
+    declension = morph_declension(parse)
+    if not declension:
+        return None
+    answer = f"{word}: {CASE_RU.get(str(parse.tag.case), str(parse.tag.case))} падеж, {declension}."
+    return russian_final_answer(answer)
+
+
+def single_word_morphology_answer(question: str, text: str) -> str | None:
+    if "морфологический разбор" not in text:
+        return None
+    item = quoted_text(question)
+    if not item:
+        return None
+    tokens = simple_word_tokens(item)
+    if len(tokens) == 2:
+        first = best_morph(tokens[0])
+        second = best_morph(tokens[1])
+        if first and second and "PREP" in first.tag and "NOUN" in second.tag:
+            case = "loct" if str(first.normal_form) in {"в", "на"} else str(second.tag.case)
+            declension = morph_declension(second)
+            bits = [
+                f"{tokens[0]} — предлог",
+                f"{tokens[1]} — существительное",
+                f"начальная форма: {second.normal_form}",
+                NUMBER_RU.get(str(second.tag.number), str(second.tag.number)),
+                GENDER_RU.get(str(second.tag.gender), str(second.tag.gender)),
+                f"{CASE_RU.get(case, case)} падеж",
+            ]
+            if declension:
+                bits.append(declension)
+            return russian_final_answer("; ".join(bits) + ".")
+        return None
+    if len(tokens) != 1:
+        return None
+    word = tokens[0]
+    if word.lower() in {"живой"}:
+        return None
+    parse = best_morph(word)
+    if not parse or parse.score < 0.30:
+        return None
+    pos = str(parse.tag.POS)
+    if not pos:
+        return None
+    pos_scores = parse_score_values(word, "POS")
+    if pos_scores and max(pos_scores.values()) < 0.60:
+        return None
+    bits = [f"{word} — {POS_RU.get(pos, pos)}", f"начальная форма: {parse.normal_form}"]
+    if parse.tag.aspect:
+        bits.append(ASPECT_RU.get(str(parse.tag.aspect), str(parse.tag.aspect)))
+    if parse.tag.transitivity:
+        bits.append("переходный" if str(parse.tag.transitivity) == "tran" else "непереходный")
+    if parse.tag.tense:
+        bits.append(TENSE_RU.get(str(parse.tag.tense), str(parse.tag.tense)))
+    if parse.tag.mood:
+        bits.append(MOOD_RU.get(str(parse.tag.mood), str(parse.tag.mood)))
+    if parse.tag.number:
+        bits.append(NUMBER_RU.get(str(parse.tag.number), str(parse.tag.number)))
+    gender = dominant_value(word, "gender")
+    if gender:
+        bits.append(GENDER_RU.get(gender, gender))
+    case_scores = parse_score_values(word, "case")
+    if len(case_scores) > 1 and max(case_scores.values()) < 0.45:
+        case_names = [CASE_RU.get(case, case) for case in sorted(case_scores)]
+        bits.append("падеж: " + "/".join(case_names))
+    elif parse.tag.case:
+        bits.append(f"{CASE_RU.get(str(parse.tag.case), str(parse.tag.case))} падеж")
+    declension = morph_declension(parse)
+    if declension:
+        bits.append(declension)
+    return russian_final_answer(", ".join(bits) + ".")
+
+
+def pos_sentence_answer(question: str, text: str) -> str | None:
+    if "части речи" not in text or "предложении" not in text:
+        return None
+    sentence = quoted_text(question)
+    tokens = simple_word_tokens(sentence or "")
+    if not (2 <= len(tokens) <= 12):
+        return None
+    parts = []
+    for token in tokens:
+        parse = best_morph(token)
+        if not parse or not parse.tag.POS:
+            return None
+        parts.append(f"{token} — {POS_RU.get(str(parse.tag.POS), str(parse.tag.POS))}")
+    return russian_final_answer("; ".join(parts) + ".")
+
+
+def russian_morph_grammar_answer(question: str) -> str | None:
+    text = " ".join(question.lower().replace("\u202f", " ").replace("\xa0", " ").split())
+    if not re.search(r"[а-яё]", text):
+        return None
+    return (
+        contextless_case_answer(question, text)
+        or phrase_connection_answer(question, text)
+        or one_part_sentence_answer(question, text)
+        or case_declension_answer(question, text)
+        or single_word_morphology_answer(question, text)
+        or pos_sentence_answer(question, text)
+    )
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -1026,6 +1278,7 @@ def main() -> None:
         answer = chemistry_stoichiometry_answer(row["question"]) or answer
         answer = formulaic_math_physics_answer(row["question"]) or answer
         answer = structured_school_task_answer(row["question"]) or answer
+        answer = russian_morph_grammar_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
         answer = quantity_conversion_answer(row["question"]) or answer
