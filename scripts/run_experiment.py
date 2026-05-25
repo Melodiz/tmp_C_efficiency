@@ -47,6 +47,7 @@ import c125_direct_arithmetic_final_smoke
 import c131_russian_morph_grammar_final_smoke
 import c135_calculator_written_arithmetic_final_smoke
 import c140_algebra_equation_final_smoke
+import c146_qwen3_8b_fp8_feasibility
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -99,6 +100,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C131",
             "C135",
             "C140",
+            "C146",
         ],
         help="Experiment ID to run.",
     )
@@ -207,6 +209,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c135_calculator_written_arithmetic_final_smoke.run(forwarded)
     if args.id == "C140":
         return c140_algebra_equation_final_smoke.run(forwarded)
+    if args.id == "C146":
+        return c146_qwen3_8b_fp8_feasibility.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
