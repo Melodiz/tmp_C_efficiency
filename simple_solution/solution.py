@@ -935,7 +935,7 @@ def structured_school_task_answer(question: str) -> str | None:
         r"выполнили\s+(\d+)\s+поперечн[а-я]*\s+распил[а-я]*[,.]\s+в результате получилось\s+(\d+)\s+куск[а-я]*[,.]\s+сколько досок взяли изначально\?",
         text,
     )
-    if match and "доск" in text:
+    if match and "дос" in text:
         cuts = int(match.group(1))
         pieces = int(match.group(2))
         if pieces >= cuts:
