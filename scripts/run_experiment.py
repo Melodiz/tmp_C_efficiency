@@ -40,6 +40,7 @@ import c108_qwen25_14b_awq_feasibility
 import c111_quantity_conversion_final_smoke
 import c113_numeric_exact_final_smoke
 import c116_chemistry_stoichiometry_final_smoke
+import c119_formulaic_math_physics_final_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -85,6 +86,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C111",
             "C113",
             "C116",
+            "C119",
         ],
         help="Experiment ID to run.",
     )
@@ -179,6 +181,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c113_numeric_exact_final_smoke.run(forwarded)
     if args.id == "C116":
         return c116_chemistry_stoichiometry_final_smoke.run(forwarded)
+    if args.id == "C119":
+        return c119_formulaic_math_physics_final_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
