@@ -15,7 +15,7 @@ EXPERIMENT_ID = "C160"
 EXPERIMENT_SLUG = "C160_lora_inference_compat_smoke"
 DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C160_artifacts"
 MODEL_ID = "Qwen/Qwen3-8B-AWQ"
-ADAPTER_ID = "p-e-w/Qwen3-8B-heretic-LoRA"
+ADAPTER_ID = "Elcaida/qwen3-8bvariations_lora"
 USER_PREFIX = "Ответь кратко и точно на языке задания. Не повторяй условие. В конце дай только итоговый ответ."
 
 
@@ -208,8 +208,8 @@ def run_smoke(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str, Any
                 "error_type": type(exc).__name__,
                 "error": str(exc),
                 "runtime": {"total_seconds": time.time() - start},
-                "decision_recommendation": "KILL",
-                "reason": "LoRA adapter did not load/generate on the current AWQ path; kill SFT/LoRA unless the error is a trivial runner bug.",
+                "decision_recommendation": "INVESTIGATE",
+                "reason": "LoRA adapter did not load/generate on the current AWQ path; inspect whether this is an adapter/download issue or a real vLLM compatibility failure.",
             }
         )
     return summary
@@ -257,7 +257,7 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
     if summary.get("status") == "completed":
         lines.append("Queue a tiny adapter-training smoke with strict artifact hygiene and validation gates.")
     else:
-        lines.append("Kill or investigate the LoRA branch only if the error is a trivial runner bug.")
+        lines.append("Investigate the adapter/download error first; kill the branch only if a valid Qwen3 adapter also fails to load.")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
