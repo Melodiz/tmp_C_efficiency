@@ -16,8 +16,8 @@ from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 from functools import lru_cache, reduce
 from importlib import import_module
-from math import gcd
-from math import sqrt
+from math import atan, gcd, sin
+from math import radians, sqrt
 from typing import Any
 
 from transformers import AutoTokenizer
@@ -1235,6 +1235,71 @@ def russian_morph_grammar_answer(question: str) -> str | None:
     )
 
 
+def calculator_written_arithmetic_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+
+    if "столб" in text:
+        match = re.search(r"(\d+)\s+разделить\s+на\s+(\d+)\s+в\s+столб", text)
+        if not match:
+            match = re.search(r"(\d+)\s*:\s*(\d+)", text)
+        if match and ("раздел" in text or ":" in text):
+            dividend = int(match.group(1))
+            divisor = int(match.group(2))
+            if divisor:
+                quotient, remainder = divmod(dividend, divisor)
+                value = str(quotient) if remainder == 0 else f"{quotient} (остаток {remainder})"
+                return numeric_final_answer(value)
+
+        match = re.search(r"(\d+)\s*(?:×|x|\*)\s*(\d+)\s+столб", text)
+        if not match:
+            match = re.search(r"(\d+)\s+умножить\s+на\s+(\d+)\s+столб", text)
+        if match:
+            value = int(match.group(1)) * int(match.group(2))
+            return numeric_final_answer(str(value))
+
+    match = re.fullmatch(r"(?:arctg|арктангенс)\s+(" + NUMBER_RE + r")", text)
+    if match:
+        value = parse_decimal(match.group(1))
+        if value is not None and abs(value) <= 100:
+            rendered = format_numeric_decimal(Decimal(str(round(atan(float(value)), 4))))
+            return numeric_final_answer(rendered)
+
+    match = re.fullmatch(r"(?:синус|sin)\s+(" + NUMBER_RE + r")", text)
+    if match:
+        raw = match.group(1)
+        value = parse_decimal(raw)
+        if value is None:
+            return None
+        if re.fullmatch(r"[+-]?\d+", raw):
+            degree = int(raw) % 360
+            exact = {
+                0: "0",
+                30: "1/2",
+                45: "√2/2",
+                60: "√3/2",
+                90: "1",
+                120: "√3/2",
+                135: "√2/2",
+                150: "1/2",
+                180: "0",
+                210: "-1/2",
+                225: "-√2/2",
+                240: "-√3/2",
+                270: "-1",
+                300: "-√3/2",
+                315: "-√2/2",
+                330: "-1/2",
+            }.get(degree)
+            if exact is not None:
+                return numeric_final_answer(exact)
+            return None
+        if abs(value) <= Decimal("100"):
+            rendered = format_numeric_decimal(Decimal(str(round(sin(float(value)), 4))))
+            return numeric_final_answer(rendered)
+
+    return None
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -1278,6 +1343,7 @@ def main() -> None:
         answer = chemistry_stoichiometry_answer(row["question"]) or answer
         answer = formulaic_math_physics_answer(row["question"]) or answer
         answer = structured_school_task_answer(row["question"]) or answer
+        answer = calculator_written_arithmetic_answer(row["question"]) or answer
         answer = russian_morph_grammar_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
