@@ -243,6 +243,190 @@ def km_meters_answer(question: str) -> str | None:
     return f"{value} метров\n\nИтоговый ответ: {value} метров"
 
 
+UNIT_FACTORS: dict[str, tuple[str, Decimal, int]] = {
+    "мм": ("мм", Decimal("0.001"), 1),
+    "миллиметр": ("мм", Decimal("0.001"), 1),
+    "см": ("см", Decimal("0.01"), 1),
+    "сантиметр": ("см", Decimal("0.01"), 1),
+    "дм": ("дм", Decimal("0.1"), 1),
+    "дециметр": ("дм", Decimal("0.1"), 1),
+    "м": ("м", Decimal("1"), 1),
+    "метр": ("м", Decimal("1"), 1),
+    "км": ("км", Decimal("1000"), 1),
+    "километр": ("км", Decimal("1000"), 1),
+    "ар": ("ар", Decimal("100"), 2),
+    "га": ("га", Decimal("10000"), 2),
+    "гектар": ("га", Decimal("10000"), 2),
+}
+
+
+UNIT_LABELS = {
+    (1, "мм"): "мм",
+    (1, "см"): "см",
+    (1, "дм"): "дециметров",
+    (1, "м"): "метров",
+    (1, "км"): "км",
+    (2, "мм"): "мм²",
+    (2, "см"): "см²",
+    (2, "дм"): "дм²",
+    (2, "м"): "м²",
+    (2, "км"): "км²",
+    (2, "ар"): "ар",
+    (2, "га"): "га",
+}
+
+
+NAMED_NUMBER_POWERS = {
+    "миллион": 6,
+    "миллионов": 6,
+    "миллиард": 9,
+    "миллиардов": 9,
+    "триллион": 12,
+    "триллионов": 12,
+    "квадриллион": 15,
+    "квадриллионов": 15,
+    "квинтиллион": 18,
+    "квинтиллионов": 18,
+    "секстиллион": 21,
+    "секстиллионов": 21,
+    "септиллион": 24,
+    "септиллионов": 24,
+    "октиллион": 27,
+    "октиллионов": 27,
+    "нониллион": 30,
+    "нониллионов": 30,
+    "дециллион": 33,
+    "дециллионов": 33,
+    "ундециллион": 36,
+    "ундециллионов": 36,
+}
+
+
+def normalize_conversion_text(question: str) -> str:
+    text = question.lower().replace("\u202f", " ").replace("\xa0", " ").replace("−", "-")
+    text = text.replace("ё", "е").replace("²", "^2").replace("³", "^3").replace(",", ".")
+    text = re.sub(r"\bкв\.\s*", "квадратных ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def parse_conversion_number(raw: str) -> Decimal | None:
+    try:
+        return Decimal(re.sub(r"\s+", "", raw))
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def parse_metric_unit(raw: str) -> tuple[str, Decimal, int] | None:
+    text = raw.strip()
+    if "/" in text:
+        return None
+
+    square = False
+    if re.match(r"^(?:квадратн\w*|кв)\s+", text):
+        square = True
+        text = re.sub(r"^(?:квадратн\w*|кв)\s+", "", text)
+
+    match = re.match(r"^(миллиметр\w*|сантиметр\w*|дециметр\w*|километр\w*|гектар\w*|метр\w*|мм|см|дм|км|м|га|ар)(?:\^2)?", text)
+    if not match:
+        return None
+
+    token = match.group(1)
+    key = None
+    for candidate in sorted(UNIT_FACTORS, key=len, reverse=True):
+        if token == candidate or token.startswith(candidate):
+            key = candidate
+            break
+    if key is None:
+        return None
+
+    canon, factor, forced_dim = UNIT_FACTORS[key]
+    tail = text[match.end() :]
+    if re.search(r"\s+квадратн\w*", tail) or "^2" in match.group(0):
+        square = True
+    dim = forced_dim if forced_dim == 2 else (2 if square else 1)
+    if dim == 2 and forced_dim != 2:
+        factor *= factor
+    return canon, factor, dim
+
+
+def conversion_label(unit: tuple[str, Decimal, int]) -> str:
+    canon, _, dim = unit
+    return UNIT_LABELS.get((dim, canon), "м²" if dim == 2 else "метров")
+
+
+def conversion_answer(value: Decimal, unit: tuple[str, Decimal, int]) -> str:
+    rendered = format_decimal(value)
+    label = conversion_label(unit)
+    return f"{rendered} {label}\n\nИтоговый ответ: {rendered} {label}"
+
+
+def quantity_conversion_answer(question: str) -> str | None:
+    text = normalize_conversion_text(question)
+
+    mixed = re.fullmatch(
+        rf"({NUMBER_RE})\s+километр\w*\s+({NUMBER_RE})\s+метр\w*\s+.*сколько\s+метр\w*",
+        text,
+    )
+    if mixed:
+        km = parse_conversion_number(mixed.group(1))
+        meters = parse_conversion_number(mixed.group(2))
+        if km is not None and meters is not None:
+            value = km * Decimal(1000) + meters
+            return f"{format_decimal(value)} метров\n\nИтоговый ответ: {format_decimal(value)} метров"
+
+    how_many = re.fullmatch(r"сколько\s+(.+?)\s+в\s+(?:одном\s+)?([\d.\s]+)?\s*(.+)", text)
+    if how_many:
+        target = parse_metric_unit(how_many.group(1))
+        source = parse_metric_unit(how_many.group(3))
+        amount = parse_conversion_number(how_many.group(2) or "1")
+        if source and target and amount is not None and source[2] == target[2]:
+            return conversion_answer(amount * source[1] / target[1], target)
+
+    default_area = re.fullmatch(rf"({NUMBER_RE})\s+(ар|га)\s+это\s+сколько", text)
+    if default_area:
+        source = parse_metric_unit(default_area.group(2))
+        amount = parse_conversion_number(default_area.group(1))
+        if source and amount is not None:
+            target = ("м", Decimal(1), 2)
+            return conversion_answer(amount * source[1], target)
+
+    patterns = [
+        rf"^([\d.\s]+)\s+(.+?)\s+(?:переведи|переведите|перевести)\s+в\s+(.+?)(?:\.|$)",
+        rf"^(?:переведи|переведите|перевести)\s+([\d.\s]+(?:\.\d+)?)\s+(.+?)\s+в\s+(.+?)(?:\.|$)",
+        rf"^([\d.\s]+)\s+(.+?)\s+в\s+(.+?)(?:\.|$)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if not match:
+            continue
+        source_text = match.group(2)
+        target_text = match.group(3)
+        if "/" in source_text or "/" in target_text:
+            return None
+        amount = parse_conversion_number(match.group(1))
+        source = parse_metric_unit(source_text)
+        target = parse_metric_unit(target_text)
+        if source and target and source[2] == 2 and target[2] == 1 and re.match(r"метр\w*", target_text.strip()):
+            target = ("м", Decimal(1), 2)
+        if source and target and amount is not None and source[2] == target[2]:
+            return conversion_answer(amount * source[1] / target[1], target)
+
+    named = re.search(
+        r"(ундециллион|дециллион|нониллион|октиллион|септиллион|секстиллион|квинтиллион|квадриллион|триллион|миллиард|миллион)\s*(?:—|-|это|\s)*\s*сколько\s+(триллионов|миллиардов|миллионов)",
+        text,
+    )
+    if named:
+        source_power = NAMED_NUMBER_POWERS.get(named.group(1))
+        target_power = NAMED_NUMBER_POWERS.get(named.group(2))
+        if source_power is not None and target_power is not None and source_power >= target_power:
+            diff = source_power - target_power
+            value = "1" if diff == 0 else f"10^{diff}"
+            target_name = named.group(2)
+            return f"{value} {target_name}\n\nИтоговый ответ: {value} {target_name}"
+
+    return None
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -283,6 +467,7 @@ def main() -> None:
         answer = expression_substitution_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
+        answer = quantity_conversion_answer(row["question"]) or answer
         answer = km_meters_answer(row["question"]) or answer
         result.append({"rid": row["rid"], "answer": answer})
 
