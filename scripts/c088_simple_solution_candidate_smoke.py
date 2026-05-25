@@ -171,11 +171,17 @@ def create_smoke(paths: dict[str, Path]) -> dict[str, Any]:
     for row in SMOKE_ROWS:
         answer = by_rid.get(int(row["rid"]), "")
         ok = row["expected_contains"].lower() in answer.lower()
+        if row.get("expected_exact") is not None:
+            ok = ok and answer.strip() == str(row["expected_exact"]).strip()
+        for forbidden in row.get("forbidden_contains", []):
+            ok = ok and forbidden.lower() not in answer.lower()
         passed += int(ok)
         check_items.append(
             {
                 "rid": row["rid"],
                 "expected_contains": row["expected_contains"],
+                "expected_exact": row.get("expected_exact"),
+                "forbidden_contains": row.get("forbidden_contains", []),
                 "passed": ok,
                 "answer": answer,
             }
