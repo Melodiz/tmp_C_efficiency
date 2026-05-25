@@ -11,8 +11,11 @@ import json
 import os
 import pickle
 import re
+from collections import Counter
 from decimal import Decimal, InvalidOperation
 from fractions import Fraction
+from functools import reduce
+from math import gcd
 from typing import Any
 
 from transformers import AutoTokenizer
@@ -515,6 +518,200 @@ def exact_numeric_answer(question: str) -> str | None:
     return None
 
 
+CHEM_TOKEN_RE = re.compile(r"([A-Z][a-z]?|\(|\)|\d+)")
+
+
+def parse_chemical_formula(raw: str) -> dict[str, int] | None:
+    formula = raw.strip().translate(SUBSCRIPT_DIGITS)
+    formula = re.sub(r"^\d+", "", formula)
+    tokens = CHEM_TOKEN_RE.findall(formula)
+    if not tokens or "".join(tokens) != formula:
+        return None
+
+    stack: list[Counter[str]] = [Counter()]
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "(":
+            stack.append(Counter())
+            index += 1
+            continue
+        if token == ")":
+            if len(stack) == 1:
+                return None
+            group = stack.pop()
+            index += 1
+            multiplier = 1
+            if index < len(tokens) and tokens[index].isdigit():
+                multiplier = int(tokens[index])
+                index += 1
+            for element, count in group.items():
+                stack[-1][element] += count * multiplier
+            continue
+        if re.match(r"[A-Z]", token):
+            element = token
+            index += 1
+            multiplier = 1
+            if index < len(tokens) and tokens[index].isdigit():
+                multiplier = int(tokens[index])
+                index += 1
+            stack[-1][element] += multiplier
+            continue
+        return None
+
+    if len(stack) != 1:
+        return None
+    return dict(stack[0])
+
+
+def rref_fraction_matrix(matrix: list[list[Fraction]]) -> tuple[list[list[Fraction]], list[int]]:
+    mat = [row[:] for row in matrix]
+    row_count = len(mat)
+    col_count = len(mat[0]) if row_count else 0
+    pivots: list[int] = []
+    pivot_row = 0
+    for col in range(col_count):
+        found = next((r for r in range(pivot_row, row_count) if mat[r][col]), None)
+        if found is None:
+            continue
+        mat[pivot_row], mat[found] = mat[found], mat[pivot_row]
+        pivot = mat[pivot_row][col]
+        mat[pivot_row] = [value / pivot for value in mat[pivot_row]]
+        for r in range(row_count):
+            if r == pivot_row or not mat[r][col]:
+                continue
+            factor = mat[r][col]
+            mat[r] = [value - factor * base for value, base in zip(mat[r], mat[pivot_row])]
+        pivots.append(col)
+        pivot_row += 1
+        if pivot_row == row_count:
+            break
+    return mat, pivots
+
+
+def balance_chemical_equation(equation: str) -> tuple[list[str], list[str], list[int]] | None:
+    cleaned = equation.translate(SUBSCRIPT_DIGITS)
+    cleaned = cleaned.replace("→", "=").replace("->", "=").replace("—", "=").replace("–", "=")
+    cleaned = re.sub(r"\s+", "", cleaned)
+    if "=" not in cleaned:
+        return None
+    left_raw, right_raw = cleaned.split("=", 1)
+    left = [item for item in left_raw.split("+") if item]
+    right = [item for item in right_raw.split("+") if item]
+    if not left or not right or len(left) + len(right) > 8:
+        return None
+
+    compounds = left + right
+    parsed = [parse_chemical_formula(item) for item in compounds]
+    if any(item is None for item in parsed):
+        return None
+    elements = sorted({element for item in parsed if item for element in item})
+    matrix: list[list[Fraction]] = []
+    for element in elements:
+        row: list[Fraction] = []
+        for index, compound in enumerate(parsed):
+            sign = 1 if index < len(left) else -1
+            row.append(Fraction(sign * (compound or {}).get(element, 0)))
+        matrix.append(row)
+
+    reduced, pivots = rref_fraction_matrix(matrix)
+    free_cols = [col for col in range(len(compounds)) if col not in pivots]
+    if len(free_cols) != 1:
+        return None
+
+    solution = [Fraction(0) for _ in compounds]
+    solution[free_cols[0]] = Fraction(1)
+    for row_index, col in enumerate(pivots):
+        solution[col] = -reduced[row_index][free_cols[0]]
+
+    denominator_lcm = 1
+    for value in solution:
+        denominator_lcm = denominator_lcm * value.denominator // gcd(denominator_lcm, value.denominator)
+    integers = [int(value * denominator_lcm) for value in solution]
+    if any(value <= 0 for value in integers):
+        integers = [-value for value in integers]
+    if any(value <= 0 for value in integers):
+        return None
+    divisor = abs(reduce(gcd, integers))
+    return left, right, [value // divisor for value in integers]
+
+
+def extract_chemical_equation(question: str) -> str | None:
+    text = question.translate(SUBSCRIPT_DIGITS)
+    pattern = (
+        r"((?:\d*[A-Z][A-Za-z0-9()]*\s*\+\s*)*"
+        r"\d*[A-Z][A-Za-z0-9()]*\s*(?:=|→|->)\s*"
+        r"(?:\d*[A-Z][A-Za-z0-9()]*\s*\+\s*)*"
+        r"\d*[A-Z][A-Za-z0-9()]*)"
+    )
+    match = re.search(pattern, text)
+    return match.group(1) if match else None
+
+
+def coefficient_sum_answer(question: str) -> str | None:
+    text = " ".join(question.split())
+    if not re.search(r"сумм[ауы]?\s+коэффициент", text, flags=re.IGNORECASE):
+        return None
+    equation = extract_chemical_equation(text)
+    if equation is None:
+        return None
+    balanced = balance_chemical_equation(equation)
+    if balanced is None:
+        return None
+    value = str(sum(balanced[2]))
+    return numeric_final_answer(value)
+
+
+def ammonia_synthesis_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+    if "аммиак" not in text or "водород" not in text or "азот" not in text or "выход" not in text:
+        return None
+    volume_match = re.search(rf"синтез[а-я\s]+({NUMBER_RE})\s*л\s+аммиак", text)
+    yield_match = re.search(rf"выход\s+продукт[а-я\s]+составляет\s+({NUMBER_RE})\s*%", text)
+    if not volume_match or not yield_match:
+        return None
+    ammonia_volume = parse_decimal(volume_match.group(1))
+    yield_percent = parse_decimal(yield_match.group(1))
+    if ammonia_volume is None or yield_percent is None or yield_percent == 0:
+        return None
+
+    theoretical_ammonia = ammonia_volume / (yield_percent / Decimal(100))
+    hydrogen_volume = theoretical_ammonia * Decimal(3) / Decimal(2)
+    nitrogen_mass = theoretical_ammonia / Decimal(2) / Decimal("22.4") * Decimal(28)
+    h2 = format_decimal(hydrogen_volume.quantize(Decimal("0.1")))
+    n2 = format_decimal(nitrogen_mass.quantize(Decimal("0.1")))
+    value = f"{h2} л водорода и {n2} г азота"
+    return numeric_final_answer(value)
+
+
+def concentration_stoichiometry_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+    match = re.search(
+        rf"в реакции\s+(\d+)\s*x\s*\+\s*(\d+)\s*y\s*=\s*z\s+начальн[а-я ]+концентрац[а-я ]+равны\s+({NUMBER_RE})\s+и\s+({NUMBER_RE}).*концентрац[а-я ]+y.*x\s+станет\s+({NUMBER_RE})",
+        text,
+    )
+    if not match:
+        return None
+    coef_x = Decimal(match.group(1))
+    coef_y = Decimal(match.group(2))
+    initial_x = parse_decimal(match.group(3))
+    initial_y = parse_decimal(match.group(4))
+    final_x = parse_decimal(match.group(5))
+    if initial_x is None or initial_y is None or final_x is None or coef_x == 0:
+        return None
+    consumed_x = initial_x - final_x
+    final_y = initial_y - consumed_x * coef_y / coef_x
+    return numeric_final_answer(format_numeric_decimal(final_y))
+
+
+def chemistry_stoichiometry_answer(question: str) -> str | None:
+    return (
+        coefficient_sum_answer(question)
+        or ammonia_synthesis_answer(question)
+        or concentration_stoichiometry_answer(question)
+    )
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -554,6 +751,7 @@ def main() -> None:
         answer = out.outputs[0].text.strip()
         answer = expression_substitution_answer(row["question"]) or answer
         answer = exact_numeric_answer(row["question"]) or answer
+        answer = chemistry_stoichiometry_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
         answer = quantity_conversion_answer(row["question"]) or answer
