@@ -520,6 +520,35 @@ def exact_numeric_answer(question: str) -> str | None:
     return None
 
 
+def direct_arithmetic_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+
+    match = re.fullmatch(rf"({NUMBER_RE})\s*([+*])\s*({NUMBER_RE})", text)
+    if match:
+        left = parse_decimal(match.group(1))
+        right = parse_decimal(match.group(3))
+        if left is None or right is None:
+            return None
+        value = left + right if match.group(2) == "+" else left * right
+        return numeric_final_answer(format_numeric_decimal(value))
+
+    match = re.fullmatch(rf"({NUMBER_RE})\s*-\s*({NUMBER_RE})", text)
+    if match:
+        left = parse_decimal(match.group(1))
+        right = parse_decimal(match.group(2))
+        if left is not None and right is not None:
+            return numeric_final_answer(format_numeric_decimal(left - right))
+
+    match = re.fullmatch(rf"({NUMBER_RE})\s+на\s+({NUMBER_RE})", text)
+    if match:
+        left = parse_decimal(match.group(1))
+        right = parse_decimal(match.group(2))
+        if left is not None and right not in (None, Decimal(0)):
+            return numeric_final_answer(format_numeric_decimal(left / right))
+
+    return None
+
+
 CHEM_TOKEN_RE = re.compile(r"([A-Z][a-z]?|\(|\)|\d+)")
 
 
@@ -993,6 +1022,7 @@ def main() -> None:
         answer = out.outputs[0].text.strip()
         answer = expression_substitution_answer(row["question"]) or answer
         answer = exact_numeric_answer(row["question"]) or answer
+        answer = direct_arithmetic_answer(row["question"]) or answer
         answer = chemistry_stoichiometry_answer(row["question"]) or answer
         answer = formulaic_math_physics_answer(row["question"]) or answer
         answer = structured_school_task_answer(row["question"]) or answer
