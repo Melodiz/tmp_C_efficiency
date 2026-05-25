@@ -894,7 +894,7 @@ def structured_school_task_answer(question: str) -> str | None:
         value = int(match.group(1)) * 1000
         return numeric_final_answer(f"{value} литров")
 
-    match = re.fullmatch(r"сколько грамм[а-я]* в\s+(\d+)\s+тонн[а-я]*(?:,\s*представь ответ в виде таблицы)?", text)
+    match = re.fullmatch(r"сколько грамм[а-я]* в\s+(\d+)\s+тонн[а-я]*(?:[,.]\s*представь ответ в виде таблицы)?", text)
     if match:
         value = int(match.group(1)) * 1_000_000
         return numeric_final_answer(f"{value} граммов")
@@ -931,8 +931,8 @@ def structured_school_task_answer(question: str) -> str | None:
             value = min(force_a, force_b) * distance / max(force_a, force_b)
             return numeric_final_answer(f"{format_numeric_decimal(value)} м")
 
-    match = re.fullmatch(
-        r".*выполнили\s+(\d+)\s+поперечн[а-я]*\s+распил[а-я]*[,.]\s+в результате получилось\s+(\d+)\s+куск[а-я]*[,.]\s+сколько досок взяли изначально\?",
+    match = re.search(
+        r"выполнили\s+(\d+)\s+поперечн[а-я]*\s+распил[а-я]*[,.]\s+в результате получилось\s+(\d+)\s+куск[а-я]*[,.]\s+сколько досок взяли изначально\?",
         text,
     )
     if match and "доск" in text:
