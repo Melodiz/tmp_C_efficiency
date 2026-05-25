@@ -51,6 +51,7 @@ import c146_qwen3_8b_fp8_feasibility
 import c152_selective_retry
 import c156_geometry_exact_final_smoke
 import c160_lora_inference_compat_smoke
+import c161_tiny_lora_training_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -107,6 +108,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C152",
             "C156",
             "C160",
+            "C161",
         ],
         help="Experiment ID to run.",
     )
@@ -223,6 +225,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c156_geometry_exact_final_smoke.run(forwarded)
     if args.id == "C160":
         return c160_lora_inference_compat_smoke.run(forwarded)
+    if args.id == "C161":
+        return c161_tiny_lora_training_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
