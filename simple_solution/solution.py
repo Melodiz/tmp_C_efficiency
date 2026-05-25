@@ -427,6 +427,94 @@ def quantity_conversion_answer(question: str) -> str | None:
     return None
 
 
+SUBSCRIPT_DIGITS = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
+
+
+def normalize_numeric_text(question: str) -> str:
+    text = question.lower().translate(SUBSCRIPT_DIGITS)
+    text = text.replace("\u202f", " ").replace("\xa0", " ").replace("−", "-").replace(",", ".")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def format_numeric_decimal(value: Decimal) -> str:
+    if value == value.to_integral_value():
+        return str(int(value))
+    return format(value.normalize(), "f").rstrip("0").rstrip(".").replace(".", ",")
+
+
+def numeric_final_answer(value: str) -> str:
+    return f"{value}\n\nИтоговый ответ: {value}"
+
+
+def exact_numeric_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+
+    match = re.fullmatch(r"переведи число\s+([0-7]+)\s+из восьмеричн[а-я]* системы счисления в десятичн[а-я]*\.?", text)
+    if match:
+        return numeric_final_answer(str(int(match.group(1), 8)))
+
+    match = re.fullmatch(r"переведи число\s+(\d+)\s+в двоичн[а-я]* систему счисления\.?", text)
+    if match:
+        return numeric_final_answer(format(int(match.group(1)), "b"))
+
+    match = re.fullmatch(r"выполни перевод из восьмеричн[а-я]* системы счисления в десятичн[а-я]*:\s*(.+)", text)
+    if match:
+        numbers = [item[:-1] if item.endswith("8") else item for item in re.findall(r"[0-7]+8?", match.group(1))]
+        if numbers:
+            values = " и ".join(str(int(item, 8)) for item in numbers)
+            return numeric_final_answer(values)
+
+    match = re.fullmatch(r"выполните сложение в двоичн[а-я]* системе счисления\s+([01]+)\s*\+\s*([01]+)", text)
+    if match:
+        value = int(match.group(1), 2) + int(match.group(2), 2)
+        return numeric_final_answer(format(value, "b"))
+
+    match = re.fullmatch(rf"({NUMBER_RE})\s*процент(?:ов|а)?\s+от\s+({NUMBER_RE})", text)
+    if match:
+        pct = parse_decimal(match.group(1))
+        base_value = parse_decimal(match.group(2))
+        if pct is not None and base_value is not None:
+            return numeric_final_answer(format_numeric_decimal(base_value * pct / Decimal(100)))
+
+    match = re.fullmatch(rf"({NUMBER_RE})%\s+от\s+({NUMBER_RE})", text)
+    if match:
+        pct = parse_decimal(match.group(1))
+        base_value = parse_decimal(match.group(2))
+        if pct is not None and base_value is not None:
+            return numeric_final_answer(format_numeric_decimal(base_value * pct / Decimal(100)))
+
+    match = re.fullmatch(rf"({NUMBER_RE})\s*([+-])\s*({NUMBER_RE})%", text)
+    if match:
+        base_value = parse_decimal(match.group(1))
+        pct = parse_decimal(match.group(3))
+        if base_value is not None and pct is not None:
+            delta = base_value * pct / Decimal(100)
+            value = base_value + delta if match.group(2) == "+" else base_value - delta
+            return numeric_final_answer(format_numeric_decimal(value))
+
+    match = re.fullmatch(r"(\d+)\s+(\d+)/(\d+)\s+переводится в десятичн[а-я]*", text)
+    if match:
+        whole = Decimal(match.group(1))
+        numerator = Decimal(match.group(2))
+        denominator = Decimal(match.group(3))
+        if denominator != 0:
+            return numeric_final_answer(format_numeric_decimal(whole + numerator / denominator))
+
+    match = re.fullmatch(r"([+-]?\d+)/([+-]?\d+)\s+в десятичн[а-я]*", text)
+    if match:
+        numerator = Decimal(match.group(1))
+        denominator = Decimal(match.group(2))
+        if denominator != 0:
+            return numeric_final_answer(format_numeric_decimal(numerator / denominator))
+
+    match = re.fullmatch(r"(\d+)\s+во второй степени", text)
+    if match:
+        value = int(match.group(1)) ** 2
+        return numeric_final_answer(str(value))
+
+    return None
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -465,6 +553,7 @@ def main() -> None:
     for row, out in zip(rows, outputs):
         answer = out.outputs[0].text.strip()
         answer = expression_substitution_answer(row["question"]) or answer
+        answer = exact_numeric_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
         answer = quantity_conversion_answer(row["question"]) or answer
