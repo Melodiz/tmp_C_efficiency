@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.util
 import json
 import os
+import sys
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -34,8 +37,26 @@ def artifact_paths(out_dir: Path) -> dict[str, Path]:
     }
 
 
+@lru_cache(maxsize=1)
+def load_final_solution_module() -> Any:
+    try:
+        return importlib.import_module("simple_solution.solution")
+    except ModuleNotFoundError:
+        repo_root = Path(__file__).resolve().parents[1]
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        module_path = repo_root / "simple_solution" / "solution.py"
+        spec = importlib.util.spec_from_file_location("c152_final_solution", module_path)
+        if spec is None or spec.loader is None:
+            raise
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["c152_final_solution"] = module
+        spec.loader.exec_module(module)
+        return module
+
+
 def final_stack_answer(question: str, answer: str) -> tuple[str, str | None]:
-    final = importlib.import_module("simple_solution.solution")
+    final = load_final_solution_module()
     handlers = [
         ("expression_substitution", lambda: final.expression_substitution_answer(question)),
         ("algebra_equation", lambda: final.algebra_equation_answer(question)),
