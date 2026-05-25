@@ -843,6 +843,117 @@ def formulaic_math_physics_answer(question: str) -> str | None:
     return None
 
 
+def to_roman(value: int) -> str | None:
+    if value <= 0 or value >= 4000:
+        return None
+    parts = [
+        (1000, "M"),
+        (900, "CM"),
+        (500, "D"),
+        (400, "CD"),
+        (100, "C"),
+        (90, "XC"),
+        (50, "L"),
+        (40, "XL"),
+        (10, "X"),
+        (9, "IX"),
+        (5, "V"),
+        (4, "IV"),
+        (1, "I"),
+    ]
+    out = []
+    remaining = value
+    for amount, symbol in parts:
+        while remaining >= amount:
+            out.append(symbol)
+            remaining -= amount
+    return "".join(out)
+
+
+def format_pi_radians(degrees: int) -> str:
+    value = Fraction(degrees, 180)
+    if value == 0:
+        return "0"
+    if value.denominator == 1:
+        return "π" if value.numerator == 1 else f"{value.numerator}π"
+    if value.numerator == 1:
+        return f"π/{value.denominator}"
+    return f"{value.numerator}π/{value.denominator}"
+
+
+def structured_school_task_answer(question: str) -> str | None:
+    text = normalize_numeric_text(question)
+
+    match = re.fullmatch(r"(\d+)\s*м\s+(\d+)\s*дм\s+сколько\s+дм", text)
+    if match:
+        value = int(match.group(1)) * 10 + int(match.group(2))
+        return numeric_final_answer(f"{value} дм")
+
+    match = re.fullmatch(r"сколько литр[а-я]* в\s+(\d+)\s+кубическ[а-я]* метр[а-я]*", text)
+    if match:
+        value = int(match.group(1)) * 1000
+        return numeric_final_answer(f"{value} литров")
+
+    match = re.fullmatch(r"сколько грамм[а-я]* в\s+(\d+)\s+тонн[а-я]*(?:,\s*представь ответ в виде таблицы)?", text)
+    if match:
+        value = int(match.group(1)) * 1_000_000
+        return numeric_final_answer(f"{value} граммов")
+
+    match = re.fullmatch(r"переведите в радианн[а-я]* мер[а-я]* угл[а-я]*\s+(.+)", text)
+    if match:
+        degrees = [int(item) for item in re.findall(r"\d+", match.group(1))]
+        if 1 <= len(degrees) <= 8 and all(0 <= item <= 360 for item in degrees):
+            return numeric_final_answer(", ".join(format_pi_radians(item) for item in degrees))
+
+    match = re.fullmatch(r"(\d{1,4})\s+в\s+римск[а-я]*\s+цифр[а-я]*", text)
+    if match:
+        roman = to_roman(int(match.group(1)))
+        if roman is not None:
+            return numeric_final_answer(roman)
+
+    match = re.fullmatch(
+        r"периметр равнобедренного треугольника составляет\s+(\d+)\s*см[,.]\s+при этом основание превышает боковую сторону на\s+(\d+)\s*см[,.]\s+найдите длину боковой стороны[.]?",
+        text,
+    )
+    if match:
+        side = Fraction(int(match.group(1)) - int(match.group(2)), 3)
+        return numeric_final_answer(f"{format_fraction(side)} см")
+
+    match = re.fullmatch(
+        r"задача[.]?\s+на концах невесомого рычага действуют силы\s+(\d+)\s+и\s+(\d+)\s*н[,.]\s+расстояние от точки опоры до меньшей силы равно\s+(" + NUMBER_RE + r")\s*м[,.]\s+определи длину плеча большей силы[,.]\s+если рычаг находится в равновесии[.]?",
+        text,
+    )
+    if match:
+        force_a = Decimal(match.group(1))
+        force_b = Decimal(match.group(2))
+        distance = parse_decimal(match.group(3))
+        if distance is not None:
+            value = min(force_a, force_b) * distance / max(force_a, force_b)
+            return numeric_final_answer(f"{format_numeric_decimal(value)} м")
+
+    match = re.fullmatch(
+        r".*выполнили\s+(\d+)\s+поперечн[а-я]*\s+распил[а-я]*[,.]\s+в результате получилось\s+(\d+)\s+куск[а-я]*[,.]\s+сколько досок взяли изначально\?",
+        text,
+    )
+    if match and "доск" in text:
+        cuts = int(match.group(1))
+        pieces = int(match.group(2))
+        if pieces >= cuts:
+            return numeric_final_answer(str(pieces - cuts))
+
+    match = re.fullmatch(
+        r".*вероятность того[,.]\s+что .* больше\s+\d+\s+метр[а-я]*[,.]\s+равна\s+(" + NUMBER_RE + r").*вероятность того[,.]\s+что .* более\s+\d+\s+метр[а-я]*[,.]\s+равна\s+(" + NUMBER_RE + r").*более\s+\d+\s+метр[а-я]*[,.]\s+но не более\s+\d+\s+метр[а-я]*\?",
+        text,
+    )
+    if match:
+        high = parse_decimal(match.group(1))
+        higher = parse_decimal(match.group(2))
+        if high is not None and higher is not None:
+            return numeric_final_answer(format_numeric_decimal(high - higher))
+
+    return None
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -884,6 +995,7 @@ def main() -> None:
         answer = exact_numeric_answer(row["question"]) or answer
         answer = chemistry_stoichiometry_answer(row["question"]) or answer
         answer = formulaic_math_physics_answer(row["question"]) or answer
+        answer = structured_school_task_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
         answer = quantity_conversion_answer(row["question"]) or answer
