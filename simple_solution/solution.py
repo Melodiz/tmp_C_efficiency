@@ -11,6 +11,7 @@ import json
 import os
 import pickle
 import re
+from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 from typing import Any
 
@@ -212,6 +213,36 @@ def cleanup_english_cloze_answer(question: str, answer: str) -> str | None:
     return first
 
 
+def parse_decimal(raw: str) -> Decimal | None:
+    try:
+        return Decimal(raw.replace(",", ".").replace("−", "-"))
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def format_decimal(value: Decimal) -> str:
+    if value == value.to_integral_value():
+        return str(int(value))
+    return format(value.normalize(), "f").rstrip("0").rstrip(".").replace(".", ",")
+
+
+def km_meters_answer(question: str) -> str | None:
+    text = question.lower().replace("\u202f", " ").replace("\xa0", " ").replace("−", "-")
+    text = re.sub(r"\s+", " ", text).strip()
+    match = re.fullmatch(
+        rf"({NUMBER_RE})\s+километр(?:ов|а)?\s+({NUMBER_RE})\s+метр(?:ов|а)?\s+.*сколько\s+метр(?:ов)?",
+        text,
+    )
+    if not match:
+        return None
+    km = parse_decimal(match.group(1))
+    meters = parse_decimal(match.group(2))
+    if km is None or meters is None:
+        return None
+    value = format_decimal(km * Decimal(1000) + meters)
+    return f"{value} метров\n\nИтоговый ответ: {value} метров"
+
+
 def build_prompt(tokenizer: Any, question: str) -> str:
     content = f"{USER_PREFIX}\n\n{question}"
     return tokenizer.apply_chat_template(
@@ -252,6 +283,7 @@ def main() -> None:
         answer = expression_substitution_answer(row["question"]) or answer
         answer = dedup_comma_loop(answer) or answer
         answer = cleanup_english_cloze_answer(row["question"], answer) or answer
+        answer = km_meters_answer(row["question"]) or answer
         result.append({"rid": row["rid"], "answer": answer})
 
     with open("output.json", "w") as f:
