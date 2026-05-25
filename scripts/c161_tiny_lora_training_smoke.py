@@ -91,9 +91,10 @@ def install_training_deps() -> str:
             "pip",
             "install",
             "--quiet",
+            "--no-cache-dir",
+            "--force-reinstall",
             "peft==0.17.1",
-            "--upgrade",
-            "bitsandbytes",
+            "bitsandbytes==0.49.2",
             "accelerate==1.10.1",
         ]
     )
