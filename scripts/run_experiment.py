@@ -33,6 +33,7 @@ import c100_qwen3_8b_no_detailed_reasoning_prompt
 import c101_c100_with_c093_handlers_hard_audit
 import c102_qwen3_8b_c093_minimal_no_reasoning_prompt
 import c103_c094_locked_val_validation
+import c104_c094_simple_solution_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -71,6 +72,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C101",
             "C102",
             "C103",
+            "C104",
         ],
         help="Experiment ID to run.",
     )
@@ -151,6 +153,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c102_qwen3_8b_c093_minimal_no_reasoning_prompt.run(forwarded)
     if args.id == "C103":
         return c103_c094_locked_val_validation.run(forwarded)
+    if args.id == "C104":
+        return c104_c094_simple_solution_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
