@@ -25,6 +25,7 @@ import c091_c090_hard_audit_validation
 import c092_true_c090_hard_audit_validation
 import c093_c092_simple_solution_smoke
 import c094_km_meters_guard
+import c096_qwen3_8b_thinking_final_only_prompt
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -55,6 +56,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C092",
             "C093",
             "C094",
+            "C096",
         ],
         help="Experiment ID to run.",
     )
@@ -119,6 +121,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c093_c092_simple_solution_smoke.run(forwarded)
     if args.id == "C094":
         return c094_km_meters_guard.run(forwarded)
+    if args.id == "C096":
+        return c096_qwen3_8b_thinking_final_only_prompt.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
