@@ -21,6 +21,8 @@ THINKING_FINAL_ONLY_PREFIX = (
     "Реши задачу внимательно. Думай при необходимости, но в ответе выведи только итоговый ответ "
     "без объяснений. Сохрани язык задания."
 )
+OMIT_ENABLE_THINKING_FALSE = True
+MECHANISM_ID = "thinking_final_only_prompt"
 
 
 def artifact_paths(out_dir: Path) -> dict[str, Path]:
@@ -42,7 +44,7 @@ def build_metrics(summary: dict[str, Any], paths: dict[str, Path]) -> dict[str, 
         "source": "C093/C082 language-preserving prefix",
         "mechanism": "enable_qwen_thinking_template_with_final_only_prefix",
         "user_prefix": THINKING_FINAL_ONLY_PREFIX,
-        "enable_thinking_false_in_template": False,
+        "enable_thinking_false_in_template": not OMIT_ENABLE_THINKING_FALSE,
         "model_backend_sampling_changed": False,
         "deterministic_handlers_added": False,
     }
@@ -88,7 +90,7 @@ def write_report(report_path: Path, metrics: dict[str, Any], args: argparse.Name
         f"- sample source: `{args.sample_source}`",
         f"- sample size: `{args.sample_size}`",
         f"- prefix: `{THINKING_FINAL_ONLY_PREFIX}`",
-        "- `enable_thinking=False` is intentionally not passed to the chat template.",
+        f"- `enable_thinking=False` passed to chat template: `{not OMIT_ENABLE_THINKING_FALSE}`.",
         "- No deterministic handlers, retrieval, cache, SFT, LoRA, model/backend change, or sampling change.",
         "",
         "## Results",
@@ -135,8 +137,8 @@ def create_dry_run(paths: dict[str, Path], args: argparse.Namespace) -> dict[str
             "sample_source": args.sample_source,
             "sample_size_requested": args.sample_size,
             "user_prefix": THINKING_FINAL_ONLY_PREFIX,
-            "enable_thinking_false_in_template": False,
-            "c096_mechanism": "thinking_final_only_prompt",
+            "enable_thinking_false_in_template": not OMIT_ENABLE_THINKING_FALSE,
+            "c096_mechanism": MECHANISM_ID,
         },
         "runtime": {"sample_rows": 0},
         "validity": {
@@ -181,7 +183,7 @@ def create_gpu_artifacts(paths: dict[str, Path], args: argparse.Namespace) -> di
         gpu_sample_interval=args.gpu_sample_interval,
         seed=args.seed,
         trust_remote_code=args.trust_remote_code,
-        no_enable_thinking_false=True,
+        no_enable_thinking_false=OMIT_ENABLE_THINKING_FALSE,
         user_prefix=THINKING_FINAL_ONLY_PREFIX,
         skip_hf_metadata=args.skip_hf_metadata,
         save_prompts=False,
@@ -209,12 +211,12 @@ def create_gpu_artifacts(paths: dict[str, Path], args: argparse.Namespace) -> di
     config = summary.setdefault("config", {})
     config.update(
         {
-            "c096_mechanism": "thinking_final_only_prompt",
+            "c096_mechanism": MECHANISM_ID,
             "source_experiment_id": "C093_prompt_baseline",
             "model_backend_sampling_changed_from_c093": False,
             "deterministic_handlers_added": False,
             "user_prefix": THINKING_FINAL_ONLY_PREFIX,
-            "enable_thinking_false_in_template": False,
+            "enable_thinking_false_in_template": not OMIT_ENABLE_THINKING_FALSE,
         }
     )
     summary["paths"] = {
