@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import c169_lora_training_stack_import_smoke as base
+import c171_lora_training_stack_torchao_import_smoke as c171
 
 
 EXPERIMENT_ID = "C190"
@@ -243,7 +244,7 @@ def run_audit(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str, Any
     paths["probe_log"].write_text(probe_log + "\n", encoding="utf-8")
     probe_json = None
     try:
-        probe_json = json.loads(probe_log)
+        probe_json = c171.parse_probe_json(probe_log) or json.loads(probe_log)
         base.write_json(paths["probe"], probe_json)
     except Exception:
         probe_json = None
