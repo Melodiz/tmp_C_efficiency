@@ -55,20 +55,27 @@ def task_probe_source(model_id: str, train_rows: int, val_rows: int, steps: int,
         '                outputs.append({"norm": norm_text, "exact": exact, "ref_in_output": ref_in_output, "output_in_ref": output_in_ref, "final_exact": final_exact, "invalid": invalid, "cap_hit": cap_hit, "repetition": repeat, "new_tokens": new_tokens, "bucket": bucket})\n',
     )
     source = source.replace(
-        '            pool = data[(data["question_len"] <= 350) & (data["target_reject_reason"] == "ok")].copy()\n'
-        '            pool["reference_answer"] = pool["answer_only_target"]\n'
-        '            selected = pool.sample(64, random_state=181).to_dict(orient="records")\n'
-        f'            train = selected[:{train_rows}]\n'
-        f'            val = selected[{train_rows}:{train_rows + val_rows}]\n',
-        '            ok_pool = data[(data["question_len"] <= 350) & (data["target_reject_reason"] == "ok")].copy()\n'
-        '            train_df = ok_pool.sample(min({train_rows}, len(ok_pool)), random_state={seed})\n'
-        '            train_df = train_df.copy()\n'
-        '            train_df["reference_answer"] = train_df["answer_only_target"]\n'
-        '            train = train_df.to_dict(orient="records")\n'
-        '            train_ids = set(train_df["row_id"].tolist())\n'
-        '            val_pool = data[(data["question_len"] <= 500) & (~data["row_id"].isin(train_ids))].copy()\n'
-        '            val_df = val_pool.sample(min({val_rows}, len(val_pool)), random_state={val_seed})\n'
-        '            val = val_df.to_dict(orient="records")\n'.format(train_rows=train_rows, val_rows=val_rows, seed=seed, val_seed=seed + 1),
+        '    data["question_len"] = data["question"].astype(str).str.len()\n'
+        '    data["answer_len"] = data["reference_answer"].astype(str).str.len()\n'
+        '    pool = data[(data["question_len"] <= 350) & (data["answer_len"] <= 80)].copy()\n'
+        '    selected = pool.sample({selected_rows}, random_state={seed}).to_dict(orient="records")\n'
+        '    train = selected[:{train_rows}]\n'
+        '    val = selected[{train_rows}:{selected_rows}]\n'.format(selected_rows=train_rows + val_rows, train_rows=train_rows, seed=seed),
+        '    data["question_len"] = data["question"].astype(str).str.len()\n'
+        '    target_pairs = data["reference_answer"].map(answer_only_target)\n'
+        '    data["answer_only_target"] = target_pairs.map(lambda item: item[0])\n'
+        '    data["target_reject_reason"] = target_pairs.map(lambda item: item[1])\n'
+        '    data["answer_len"] = data["answer_only_target"].fillna("").astype(str).str.len()\n'
+        '    target_rejection_counts = dict(Counter(data["target_reject_reason"].astype(str)))\n'
+        '    ok_pool = data[(data["question_len"] <= 350) & (data["target_reject_reason"] == "ok")].copy()\n'
+        '    train_df = ok_pool.sample(min({train_rows}, len(ok_pool)), random_state={seed})\n'
+        '    train_df = train_df.copy()\n'
+        '    train_df["reference_answer"] = train_df["answer_only_target"]\n'
+        '    train = train_df.to_dict(orient="records")\n'
+        '    train_ids = set(train_df["row_id"].tolist())\n'
+        '    val_pool = data[(data["question_len"] <= 500) & (~data["row_id"].isin(train_ids))].copy()\n'
+        '    val_df = val_pool.sample(min({val_rows}, len(val_pool)), random_state={val_seed})\n'
+        '    val = val_df.to_dict(orient="records")\n'.format(train_rows=train_rows, val_rows=val_rows, seed=seed, val_seed=seed + 1),
     )
     source = source.replace('"pool_rows": int(len(pool)),', '"pool_rows": int(len(ok_pool)), "val_pool_rows": int(len(val_pool)),')
     source = source.replace(
