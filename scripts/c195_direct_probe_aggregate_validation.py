@@ -18,6 +18,8 @@ import c169_lora_training_stack_import_smoke as base
 EXPERIMENT_ID = "C195"
 EXPERIMENT_SLUG = "C195_direct_probe_aggregate_validation"
 DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C195_artifacts"
+DEFAULT_SAMPLE_SIZE = 64
+DEFAULT_SEED = 195
 MODEL_ID = "Qwen/Qwen3-8B-AWQ"
 MORPH_PACKAGES = ("pymorphy3==2.0.6", "pymorphy3-dicts-ru", "razdel==0.5.0")
 
@@ -26,8 +28,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="C195 aggregate validation via proven direct probe path.")
     parser.add_argument("--out", default=str(DEFAULT_OUT_DIR))
     parser.add_argument("--sample-source", choices=["hard_audit", "locked_val", "dataset"], default="locked_val")
-    parser.add_argument("--sample-size", type=int, default=64)
-    parser.add_argument("--seed", type=int, default=195)
+    parser.add_argument("--sample-size", type=int, default=DEFAULT_SAMPLE_SIZE)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args(argv)
 
@@ -264,7 +266,7 @@ def run_validation(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str
 
 def write_report(path: Path, summary: dict[str, Any]) -> None:
     lines = [
-        "# C195 Direct-Probe Aggregate Validation",
+        f"# {EXPERIMENT_ID} Direct-Probe Aggregate Validation",
         "",
         "## Objective",
         "- No leaderboard submission.",
