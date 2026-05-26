@@ -24,6 +24,21 @@ EXPERIMENT_SLUG = "C201_c111_vs_current_stack_aggregate"
 DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C201_artifacts"
 MODEL_ID = "Qwen/Qwen3-8B-AWQ"
 C111_COMMIT = "9426eb7"
+CURRENT_HANDLER_NAMES = {
+    "expression_substitution",
+    "algebra_equation",
+    "exact_numeric",
+    "direct_arithmetic",
+    "chemistry_stoichiometry",
+    "geometry_exact",
+    "formulaic_math_physics",
+    "structured_school_task",
+    "calculator_written_arithmetic",
+    "russian_morph_grammar",
+    "quantity_conversion",
+    "km_meters",
+    "fallback_model",
+}
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -82,7 +97,10 @@ def c111_stack(module: Any, question: str, answer: str) -> tuple[str, str]:
 
 
 def current_stack(module: Any, question: str, answer: str) -> tuple[str, str]:
-    return agg.first_handler(module, question, answer)
+    handler, final = agg.first_handler(module, question, answer)
+    if handler not in CURRENT_HANDLER_NAMES:
+        raise RuntimeError(f"Unexpected current handler label: {handler!r}")
+    return final, handler
 
 
 def update_quality(counter: Counter[str], answer: str, reference: str) -> None:
