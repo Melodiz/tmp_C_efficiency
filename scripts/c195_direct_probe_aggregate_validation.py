@@ -6,7 +6,7 @@ import re
 import shutil
 import time
 from collections import Counter, defaultdict
-from importlib import import_module
+import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Sequence
@@ -165,7 +165,10 @@ def run_validation(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str
         return summary
 
     install_final_path_dependencies()
-    solution = import_module("simple_solution.solution")
+    spec = importlib.util.spec_from_file_location("task_c_solution_module", Path("simple_solution/solution.py"))
+    solution = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(solution)
     run_args = SimpleNamespace(
         candidate="qwen3-8b-awq",
         model_id=MODEL_ID,
