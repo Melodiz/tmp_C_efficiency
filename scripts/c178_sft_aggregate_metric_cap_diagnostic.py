@@ -14,43 +14,39 @@ ORIGINAL_TASK_PROBE_SOURCE = c177.task_probe_source
 def task_probe_source(model_id: str, train_rows: int, val_rows: int, steps: int, max_seq_len: int, max_new_tokens: int, seed: int) -> str:
     source = ORIGINAL_TASK_PROBE_SOURCE(model_id, train_rows, val_rows, steps, max_seq_len, max_new_tokens, seed)
     source = source.replace(
-        'exact = normalize(text) == normalize(row["reference_answer"])\n'
-        '                invalid = invalid_output(text)\n'
-        '                cap_hit = new_tokens >= {max_new_tokens}\n',
-        'norm_text = normalize(text)\n'
-        '                norm_ref = normalize(row["reference_answer"])\n'
-        '                lines = [part for part in str(text).splitlines() if part.strip()]\n'
-        '                final_norm = normalize(lines[-1] if lines else text)\n'
-        '                exact = norm_text == norm_ref\n'
-        '                ref_in_output = bool(norm_ref) and norm_ref in norm_text\n'
-        '                output_in_ref = bool(norm_text) and norm_text in norm_ref\n'
-        '                final_exact = final_norm == norm_ref\n'
-        '                invalid = invalid_output(text)\n'
-        '                cap_hit = new_tokens >= {max_new_tokens}\n',
+        '        exact = normalize(text) == normalize(row["reference_answer"])\n',
+        '        norm_text = normalize(text)\n'
+        '        norm_ref = normalize(row["reference_answer"])\n'
+        '        lines = [part for part in str(text).splitlines() if part.strip()]\n'
+        '        final_norm = normalize(lines[-1] if lines else text)\n'
+        '        exact = norm_text == norm_ref\n'
+        '        ref_in_output = bool(norm_ref) and norm_ref in norm_text\n'
+        '        output_in_ref = bool(norm_text) and norm_text in norm_ref\n'
+        '        final_exact = final_norm == norm_ref\n',
     )
     source = source.replace(
-        'for key, value in (("exact", exact), ("invalid", invalid), ("cap_hit", cap_hit)):\n'
-        '                    stats[key] += int(value)\n'
-        '                    bucket_stats[key] += int(value)\n',
-        'for key, value in (("exact", exact), ("ref_in_output", ref_in_output), ("output_in_ref", output_in_ref), ("final_exact", final_exact), ("invalid", invalid), ("cap_hit", cap_hit)):\n'
-        '                    stats[key] += int(value)\n'
-        '                    bucket_stats[key] += int(value)\n',
+        '        for key, value in (("exact", exact), ("invalid", invalid), ("cap_hit", cap_hit)):\n'
+        '            stats[key] += int(value)\n'
+        '            bucket_stats[key] += int(value)\n',
+        '        for key, value in (("exact", exact), ("ref_in_output", ref_in_output), ("output_in_ref", output_in_ref), ("final_exact", final_exact), ("invalid", invalid), ("cap_hit", cap_hit)):\n'
+        '            stats[key] += int(value)\n'
+        '            bucket_stats[key] += int(value)\n',
     )
     source = source.replace(
         'outputs.append({"norm": normalize(text), "exact": exact, "invalid": invalid, "cap_hit": cap_hit, "new_tokens": new_tokens, "bucket": bucket})',
         'outputs.append({"norm": norm_text, "exact": exact, "ref_in_output": ref_in_output, "output_in_ref": output_in_ref, "final_exact": final_exact, "invalid": invalid, "cap_hit": cap_hit, "new_tokens": new_tokens, "bucket": bucket})',
     )
     source = source.replace(
-        '"base_invalid_count": int(base_stats.get("invalid", 0)),\n'
-        '                "lora_invalid_count": int(lora_stats.get("invalid", 0)),\n',
-        '"base_ref_in_output_count": int(base_stats.get("ref_in_output", 0)),\n'
-        '                "lora_ref_in_output_count": int(lora_stats.get("ref_in_output", 0)),\n'
-        '                "base_output_in_ref_count": int(base_stats.get("output_in_ref", 0)),\n'
-        '                "lora_output_in_ref_count": int(lora_stats.get("output_in_ref", 0)),\n'
-        '                "base_final_exact_count": int(base_stats.get("final_exact", 0)),\n'
-        '                "lora_final_exact_count": int(lora_stats.get("final_exact", 0)),\n'
-        '                "base_invalid_count": int(base_stats.get("invalid", 0)),\n'
-        '                "lora_invalid_count": int(lora_stats.get("invalid", 0)),\n',
+        '        "base_invalid_count": int(base_stats.get("invalid", 0)),\n'
+        '        "lora_invalid_count": int(lora_stats.get("invalid", 0)),\n',
+        '        "base_ref_in_output_count": int(base_stats.get("ref_in_output", 0)),\n'
+        '        "lora_ref_in_output_count": int(lora_stats.get("ref_in_output", 0)),\n'
+        '        "base_output_in_ref_count": int(base_stats.get("output_in_ref", 0)),\n'
+        '        "lora_output_in_ref_count": int(lora_stats.get("output_in_ref", 0)),\n'
+        '        "base_final_exact_count": int(base_stats.get("final_exact", 0)),\n'
+        '        "lora_final_exact_count": int(lora_stats.get("final_exact", 0)),\n'
+        '        "base_invalid_count": int(base_stats.get("invalid", 0)),\n'
+        '        "lora_invalid_count": int(lora_stats.get("invalid", 0)),\n',
     )
     return source
 
