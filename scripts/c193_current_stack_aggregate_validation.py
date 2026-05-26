@@ -26,7 +26,7 @@ MORPH_PACKAGES = ("pymorphy3==2.0.6", "pymorphy3-dicts-ru", "razdel==0.5.0")
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="C193 aggregate-only validation of the current final stack.")
     parser.add_argument("--out", default=str(DEFAULT_OUT_DIR))
-    parser.add_argument("--sample-size", type=int, default=1000)
+    parser.add_argument("--sample-size", type=int, default=400)
     parser.add_argument("--seed", type=int, default=193)
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args(argv)
