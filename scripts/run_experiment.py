@@ -65,6 +65,7 @@ import c182_answer_only_sft_confirmation_smoke
 import c184_answer_only_scaled_sft_smoke
 import c186_answer_only_route_harm_diagnostic
 import c188_answer_only_input_route_audit
+import c190_final_stack_coverage_audit
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -135,6 +136,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C184",
             "C186",
             "C188",
+            "C190",
         ],
         help="Experiment ID to run.",
     )
@@ -279,6 +281,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c186_answer_only_route_harm_diagnostic.run(forwarded)
     if args.id == "C188":
         return c188_answer_only_input_route_audit.run(forwarded)
+    if args.id == "C190":
+        return c190_final_stack_coverage_audit.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
