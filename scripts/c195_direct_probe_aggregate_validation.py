@@ -118,7 +118,16 @@ def rates(table: dict[str, Counter[str]]) -> dict[str, dict[str, Any]]:
         rows = int(counts.get("rows", 0))
         item: dict[str, Any] = {name: int(value) for name, value in counts.items()}
         if rows:
-            for name in ("exact", "final_line_exact", "ref_in_output", "output_in_ref", "base_exact"):
+            for name in (
+                "exact",
+                "final_line_exact",
+                "ref_in_output",
+                "output_in_ref",
+                "base_exact",
+                "base_hit_max_tokens",
+                "base_repetition_loop",
+                "base_empty",
+            ):
                 item[name + "_rate"] = item.get(name, 0) / rows
         out[str(key)] = item
     return out
@@ -207,6 +216,8 @@ def run_validation(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str
     by_bucket: defaultdict[str, Counter[str]] = defaultdict(Counter)
     by_label: defaultdict[str, Counter[str]] = defaultdict(Counter)
     by_handler: defaultdict[str, Counter[str]] = defaultdict(Counter)
+    failure_by_category: defaultdict[str, Counter[str]] = defaultdict(Counter)
+    failure_by_bucket: defaultdict[str, Counter[str]] = defaultdict(Counter)
     handler_counts: Counter[str] = Counter()
     validity: Counter[str] = Counter()
 
@@ -228,6 +239,15 @@ def run_validation(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str
             validity["base_repetition_loop"] += int(bool(row.get("repetition_loop_suspected")))
             validity["deterministic_first_fire"] += int(handler != "fallback_model")
             validity["fallback_model"] += int(handler == "fallback_model")
+            for key in (category,):
+                failure_by_category[key]["rows"] += 1
+                failure_by_category[key]["base_hit_max_tokens"] += int(bool(row.get("hit_max_tokens")))
+                failure_by_category[key]["base_repetition_loop"] += int(bool(row.get("repetition_loop_suspected")))
+                failure_by_category[key]["base_empty"] += int(not base_answer)
+            failure_by_bucket[bucket]["rows"] += 1
+            failure_by_bucket[bucket]["base_hit_max_tokens"] += int(bool(row.get("hit_max_tokens")))
+            failure_by_bucket[bucket]["base_repetition_loop"] += int(bool(row.get("repetition_loop_suspected")))
+            failure_by_bucket[bucket]["base_empty"] += int(not base_answer)
             update(overall, final_answer, reference, base_answer)
             update(by_category[category], final_answer, reference, base_answer)
             update(by_bucket[bucket], final_answer, reference, base_answer)
@@ -254,6 +274,8 @@ def run_validation(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str
             "by_bucket": dict(sorted(rates(by_bucket).items(), key=lambda kv: -kv[1].get("rows", 0))[:40]),
             "by_target_label": dict(sorted(rates(by_label).items())),
             "by_first_handler": dict(sorted(rates(by_handler).items(), key=lambda kv: -kv[1].get("rows", 0))),
+            "failure_by_category": dict(sorted(rates(failure_by_category).items())),
+            "failure_by_bucket": dict(sorted(rates(failure_by_bucket).items(), key=lambda kv: -kv[1].get("base_hit_max_tokens", 0) - kv[1].get("base_repetition_loop", 0))[:40]),
             "model_loaded": probe_summary.get("status") == "completed",
             "raw_temp_files_deleted": {
                 "outputs": not output_path.exists(),
@@ -307,6 +329,10 @@ def write_report(path: Path, summary: dict[str, Any]) -> None:
             "",
             "## Category Metrics",
             f"`{summary.get('by_category')}`",
+            "",
+            "## Failure Slices",
+            f"- by category: `{summary.get('failure_by_category')}`",
+            f"- by bucket: `{summary.get('failure_by_bucket')}`",
             "",
             "## Hygiene",
             f"- raw task data read remote only: `{summary.get('raw_task_data_read_remote_only')}`",
