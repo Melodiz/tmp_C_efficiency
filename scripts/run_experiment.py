@@ -80,6 +80,7 @@ import c203_c111_qwen3_14b_aggregate
 import c204_qwen3_14b_relaxed_prefix_aggregate
 import c207_routed_answer_only_adapter_diagnostic
 import c209_c111_thinking_mode_aggregate
+import c211_c111_task_conditional_prompt_aggregate
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -165,6 +166,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C204",
             "C207",
             "C209",
+            "C211",
         ],
         help="Experiment ID to run.",
     )
@@ -339,6 +341,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c207_routed_answer_only_adapter_diagnostic.run(forwarded)
     if args.id == "C209":
         return c209_c111_thinking_mode_aggregate.run(forwarded)
+    if args.id == "C211":
+        return c211_c111_task_conditional_prompt_aggregate.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
