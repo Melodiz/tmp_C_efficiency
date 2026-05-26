@@ -57,6 +57,7 @@ import c170_lora_training_stack_target_import_smoke
 import c171_lora_training_stack_torchao_import_smoke
 import c172_synthetic_tiny_lora_training_step_smoke
 import c173_qwen3_8b_synthetic_qlora_smoke
+import c175_remote_tiny_task_sft_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -119,6 +120,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C171",
             "C172",
             "C173",
+            "C175",
         ],
         help="Experiment ID to run.",
     )
@@ -247,6 +249,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c172_synthetic_tiny_lora_training_step_smoke.run(forwarded)
     if args.id == "C173":
         return c173_qwen3_8b_synthetic_qlora_smoke.run(forwarded)
+    if args.id == "C175":
+        return c175_remote_tiny_task_sft_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
