@@ -72,6 +72,7 @@ import c194_aggregate_validation_unblock
 import c195_direct_probe_aggregate_validation
 import c196_current_stack_scaled_aggregate_validation
 import c197_failure_slice_aggregate_validation
+import c198_targeted_failure_retry
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -149,6 +150,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C195",
             "C196",
             "C197",
+            "C198",
         ],
         help="Experiment ID to run.",
     )
@@ -307,6 +309,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c196_current_stack_scaled_aggregate_validation.run(forwarded)
     if args.id == "C197":
         return c197_failure_slice_aggregate_validation.run(forwarded)
+    if args.id == "C198":
+        return c198_targeted_failure_retry.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
