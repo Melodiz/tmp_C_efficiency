@@ -62,6 +62,7 @@ import c177_base_vs_lora_aggregate_validation_smoke
 import c178_sft_aggregate_metric_cap_diagnostic
 import c181_answer_only_tiny_sft_smoke
 import c182_answer_only_sft_confirmation_smoke
+import c184_answer_only_scaled_sft_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -129,6 +130,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C178",
             "C181",
             "C182",
+            "C184",
         ],
         help="Experiment ID to run.",
     )
@@ -267,6 +269,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c181_answer_only_tiny_sft_smoke.run(forwarded)
     if args.id == "C182":
         return c182_answer_only_sft_confirmation_smoke.run(forwarded)
+    if args.id == "C184":
+        return c184_answer_only_scaled_sft_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
