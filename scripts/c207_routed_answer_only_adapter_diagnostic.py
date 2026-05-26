@@ -67,8 +67,8 @@ def task_probe_source(model_id: str, train_rows: int, val_rows: int, steps: int,
         '            train = train_df.to_dict(orient="records")\n'
         '            train_ids = set(train_df["row_id"].tolist())\n'
         '            val_pool = data[(data["question_len"] <= 500) & (~data["row_id"].isin(train_ids))].copy()\n'
-        '            val_df = val_pool.sample(min({val_rows}, len(val_pool)), random_state={seed + 1})\n'
-        '            val = val_df.to_dict(orient="records")\n'.format(train_rows=train_rows, val_rows=val_rows, seed=seed),
+        '            val_df = val_pool.sample(min({val_rows}, len(val_pool)), random_state={val_seed})\n'
+        '            val = val_df.to_dict(orient="records")\n'.format(train_rows=train_rows, val_rows=val_rows, seed=seed, val_seed=seed + 1),
     )
     source = source.replace('"pool_rows": int(len(pool)),', '"pool_rows": int(len(ok_pool)), "val_pool_rows": int(len(val_pool)),')
     source = source.replace(
