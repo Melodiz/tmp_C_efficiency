@@ -68,6 +68,7 @@ import c188_answer_only_input_route_audit
 import c190_final_stack_coverage_audit
 import c191_dependency_parity_coverage_audit
 import c193_current_stack_aggregate_validation
+import c194_aggregate_validation_unblock
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -141,6 +142,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C190",
             "C191",
             "C193",
+            "C194",
         ],
         help="Experiment ID to run.",
     )
@@ -291,6 +293,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c191_dependency_parity_coverage_audit.run(forwarded)
     if args.id == "C193":
         return c193_current_stack_aggregate_validation.run(forwarded)
+    if args.id == "C194":
+        return c194_aggregate_validation_unblock.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
