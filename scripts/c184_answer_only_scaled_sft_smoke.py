@@ -12,9 +12,11 @@ EXPERIMENT_SLUG = "C184_answer_only_scaled_sft_smoke"
 
 
 def task_probe_source(model_id: str, train_rows: int, val_rows: int, steps: int, max_seq_len: int, max_new_tokens: int, seed: int) -> str:
-    source = c181.task_probe_source(model_id, train_rows, val_rows, steps, max_seq_len, max_new_tokens, 181)
+    source = c181.task_probe_source(model_id, 32, 32, steps, max_seq_len, max_new_tokens, 181)
     source = source.replace("random_state=181", f"random_state={seed}")
     source = source.replace("pool.sample(64,", f"pool.sample({train_rows + val_rows},")
+    source = source.replace("selected[:32]", f"selected[:{train_rows}]")
+    source = source.replace("selected[32:64]", f"selected[{train_rows}:{train_rows + val_rows}]")
     return source
 
 
