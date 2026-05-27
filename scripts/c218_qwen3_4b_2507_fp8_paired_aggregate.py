@@ -75,8 +75,8 @@ def run_validation(args: argparse.Namespace) -> dict[str, Any]:
 
     sampler = probe.GpuMemorySampler(interval_s=0.5)
     sampler.start()
-    baseline, baseline_runtime = paired.run_model(BASELINE_MODEL_ID, c111, rows, args.seed)
-    variant, variant_runtime = paired.run_model(VARIANT_MODEL_ID, c111, rows, args.seed)
+    baseline, baseline_runtime = paired.run_model(BASELINE_MODEL_ID, c111, rows, args.seed, "awq_marlin")
+    variant, variant_runtime = paired.run_model(VARIANT_MODEL_ID, c111, rows, args.seed, "fp8")
     sampler.stop()
 
     total_generation_s = baseline_runtime["generation_s"] + variant_runtime["generation_s"]

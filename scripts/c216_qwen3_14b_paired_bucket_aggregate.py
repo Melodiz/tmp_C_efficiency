@@ -84,7 +84,13 @@ def keyed_delta(variant: dict[str, Any], baseline: dict[str, Any], key: str) -> 
     return out
 
 
-def run_model(model_id: str, c111: Any, rows: list[dict[str, Any]], seed: int) -> tuple[dict[str, Any], dict[str, Any]]:
+def run_model(
+    model_id: str,
+    c111: Any,
+    rows: list[dict[str, Any]],
+    seed: int,
+    quantization: str = "awq_marlin",
+) -> tuple[dict[str, Any], dict[str, Any]]:
     from vllm import LLM, SamplingParams
 
     tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=True)
@@ -95,7 +101,7 @@ def run_model(model_id: str, c111: Any, rows: list[dict[str, Any]], seed: int) -
     llm = LLM(
         model=model_id,
         dtype="float16",
-        quantization="awq_marlin",
+        quantization=quantization,
         max_model_len=c111.MAX_MODEL_LEN,
         gpu_memory_utilization=0.9,
         tokenizer_mode="auto",
