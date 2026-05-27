@@ -121,6 +121,7 @@ import c268_answer_marker_neutralization_scaled
 import c269_adaptive_length_gate_audit
 import c270_adaptive_length_paired_aggregate
 import c271_full_reference_sft_gate_audit
+import c272_full_reference_sft_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -247,6 +248,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C269",
             "C270",
             "C271",
+            "C272",
         ],
         help="Experiment ID to run.",
     )
@@ -503,6 +505,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c270_adaptive_length_paired_aggregate.run(forwarded)
     if args.id == "C271":
         return c271_full_reference_sft_gate_audit.run(forwarded)
+    if args.id == "C272":
+        return c272_full_reference_sft_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
