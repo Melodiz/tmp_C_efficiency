@@ -87,6 +87,7 @@ import c220_paired_answer_judge_selector_aggregate
 import c222_c111_fallback_answer_extraction_aggregate
 import c227_phi4_mini_paired_aggregate
 import c228_gemma3_4b_paired_aggregate
+import c229_qwen25_7b_awq_paired_aggregate
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -179,6 +180,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C222",
             "C227",
             "C228",
+            "C229",
         ],
         help="Experiment ID to run.",
     )
@@ -367,6 +369,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c227_phi4_mini_paired_aggregate.run(forwarded)
     if args.id == "C228":
         return c228_gemma3_4b_paired_aggregate.run(forwarded)
+    if args.id == "C229":
+        return c229_qwen25_7b_awq_paired_aggregate.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
