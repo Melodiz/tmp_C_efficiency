@@ -99,6 +99,7 @@ import c239_c111_system_prefix_aggregate
 import c240_failure_gated_system_prefix_fallback
 import c243_c111_plus_formulaic_aggregate
 import c244_c111_plus_numeric_aggregate
+import c246_failure_gated_same_model_512
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -203,6 +204,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C240",
             "C243",
             "C244",
+            "C246",
         ],
         help="Experiment ID to run.",
     )
@@ -415,6 +417,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c243_c111_plus_formulaic_aggregate.run(forwarded)
     if args.id == "C244":
         return c244_c111_plus_numeric_aggregate.run(forwarded)
+    if args.id == "C246":
+        return c246_failure_gated_same_model_512.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
