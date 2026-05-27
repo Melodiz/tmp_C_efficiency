@@ -82,10 +82,13 @@ def summarize_precomputed(
         bucket = agg.feature_bucket(question)
         retry_base.quality_update(baseline_quality, base_final, reference)
         retry_base.quality_update(variant_quality, variant_final, reference)
-        base_ref = int(retry_base.contains_normalized(base_final, reference))
-        var_ref = int(retry_base.contains_normalized(variant_final, reference))
-        base_out_ref = int(retry_base.contains_normalized(reference, base_final))
-        var_out_ref = int(retry_base.contains_normalized(reference, variant_final))
+        n_base = agg.norm(base_final)
+        n_variant = agg.norm(variant_final)
+        n_ref = agg.norm(reference)
+        base_ref = int(bool(n_ref) and n_ref in n_base)
+        var_ref = int(bool(n_ref) and n_ref in n_variant)
+        base_out_ref = int(bool(n_base) and n_base in n_ref)
+        var_out_ref = int(bool(n_variant) and n_variant in n_ref)
         by_category_delta[category]["rows"] += 1
         by_category_delta[category]["changed"] += int(was_changed)
         by_category_delta[category]["ref_in_output_delta"] += var_ref - base_ref
