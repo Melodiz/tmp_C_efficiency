@@ -104,6 +104,7 @@ import c248_failure_gated_concise_reanswer
 import c250_closed_form_sampled_consensus
 import c251_c111_plus_algebra_equation_aggregate
 import c253_answer_shape_router_audit
+import c254_final_answer_target_audit
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -213,6 +214,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C250",
             "C251",
             "C253",
+            "C254",
         ],
         help="Experiment ID to run.",
     )
@@ -435,6 +437,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c251_c111_plus_algebra_equation_aggregate.run(forwarded)
     if args.id == "C253":
         return c253_answer_shape_router_audit.run(forwarded)
+    if args.id == "C254":
+        return c254_final_answer_target_audit.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
