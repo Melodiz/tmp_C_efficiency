@@ -94,6 +94,7 @@ import c234_semantic_proxy_calibration
 import c235_c111_max_tokens_512
 import c236_c111_max_tokens_512_scaled
 import c237_c111_max_tokens_512_scaled_setup_retry
+import c238_qwen3_4b_thinking_2507_fp8_paired_aggregate
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -193,6 +194,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C235",
             "C236",
             "C237",
+            "C238",
         ],
         help="Experiment ID to run.",
     )
@@ -395,6 +397,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c236_c111_max_tokens_512_scaled.run(forwarded)
     if args.id == "C237":
         return c237_c111_max_tokens_512_scaled_setup_retry.run(forwarded)
+    if args.id == "C238":
+        return c238_qwen3_4b_thinking_2507_fp8_paired_aggregate.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
