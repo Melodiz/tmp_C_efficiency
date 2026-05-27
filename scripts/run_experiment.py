@@ -106,6 +106,7 @@ import c251_c111_plus_algebra_equation_aggregate
 import c253_answer_shape_router_audit
 import c254_final_answer_target_audit
 import c255_broad_final_answer_sft_smoke
+import c257_coherent_residual_family_miner
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -217,6 +218,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C253",
             "C254",
             "C255",
+            "C257",
         ],
         help="Experiment ID to run.",
     )
@@ -443,6 +445,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c254_final_answer_target_audit.run(forwarded)
     if args.id == "C255":
         return c255_broad_final_answer_sft_smoke.run(forwarded)
+    if args.id == "C257":
+        return c257_coherent_residual_family_miner.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
