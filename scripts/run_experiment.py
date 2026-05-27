@@ -90,6 +90,7 @@ import c228_gemma3_4b_paired_aggregate
 import c229_qwen25_7b_awq_paired_aggregate
 import c231_c111_large_failure_map
 import c232_failure_gated_qwen25_fallback
+import c234_semantic_proxy_calibration
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -185,6 +186,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C229",
             "C231",
             "C232",
+            "C234",
         ],
         help="Experiment ID to run.",
     )
@@ -379,6 +381,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c231_c111_large_failure_map.run(forwarded)
     if args.id == "C232":
         return c232_failure_gated_qwen25_fallback.run(forwarded)
+    if args.id == "C234":
+        return c234_semantic_proxy_calibration.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
