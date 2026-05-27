@@ -132,6 +132,7 @@ import c283_synthetic_fewshot_format_prompt
 import c285_open_ended_fuller_prompt_route
 import c287_qwen3_8b_dense_paired_aggregate
 import c289_routed_dense_algebra_translation
+import c290_routed_dense_algebra_translation_scaled
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -269,6 +270,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C285",
             "C287",
             "C289",
+            "C290",
         ],
         help="Experiment ID to run.",
     )
@@ -547,6 +549,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c287_qwen3_8b_dense_paired_aggregate.run(forwarded)
     if args.id == "C289":
         return c289_routed_dense_algebra_translation.run(forwarded)
+    if args.id == "C290":
+        return c290_routed_dense_algebra_translation_scaled.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
