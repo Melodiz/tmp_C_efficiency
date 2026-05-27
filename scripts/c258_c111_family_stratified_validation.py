@@ -232,7 +232,10 @@ def run_validation(args: argparse.Namespace) -> dict[str, Any]:
             "decision_recommendation": "MUTATE",
             "reason": "C111 family-stratified aggregate validation completed.",
             "raw_task_data_read_remote_only": True,
-            "imports": {"c111_solution": "ok", "pymorphy_available": bool(c111.get_morph_analyzer())},
+            "imports": {
+                "c111_solution": "ok",
+                "pymorphy_available": bool(c111.get_morph_analyzer()) if hasattr(c111, "get_morph_analyzer") else None,
+            },
             "sample_meta": {
                 "source": args.sample_source,
                 "rows": len(rows),
