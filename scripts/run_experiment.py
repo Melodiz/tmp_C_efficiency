@@ -89,6 +89,7 @@ import c227_phi4_mini_paired_aggregate
 import c228_gemma3_4b_paired_aggregate
 import c229_qwen25_7b_awq_paired_aggregate
 import c231_c111_large_failure_map
+import c232_failure_gated_qwen25_fallback
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -183,6 +184,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C228",
             "C229",
             "C231",
+            "C232",
         ],
         help="Experiment ID to run.",
     )
@@ -375,6 +377,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c229_qwen25_7b_awq_paired_aggregate.run(forwarded)
     if args.id == "C231":
         return c231_c111_large_failure_map.run(forwarded)
+    if args.id == "C232":
+        return c232_failure_gated_qwen25_fallback.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
