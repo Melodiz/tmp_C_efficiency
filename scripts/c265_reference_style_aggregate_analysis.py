@@ -229,7 +229,7 @@ def probe_source() -> str:
                 for name, pattern in FORMAL_MARKERS.items():
                     hit = bool(re.search(pattern, low, flags=re.I))
                     register_counts[name] += int(hit)
-                    bucket_markers[bucket][f"reg_{name}"] += int(hit)
+                    bucket_markers[bucket][f"reg_{{name}}"] += int(hit)
 
             rows = int(len(data))
             top_template, top_template_count = ("", 0)
