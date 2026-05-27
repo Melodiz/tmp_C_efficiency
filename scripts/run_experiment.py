@@ -128,6 +128,7 @@ import c275_tiny_full_reference_sft_cap_probe
 import c277_content_preserving_length_amplification
 import c278_c111_fallback_formal_rewrite
 import c281_mistral7b_awq_paired_aggregate
+import c283_synthetic_fewshot_format_prompt
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -261,6 +262,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C277",
             "C278",
             "C281",
+            "C283",
         ],
         help="Experiment ID to run.",
     )
@@ -531,6 +533,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c278_c111_fallback_formal_rewrite.run(forwarded)
     if args.id == "C281":
         return c281_mistral7b_awq_paired_aggregate.run(forwarded)
+    if args.id == "C283":
+        return c283_synthetic_fewshot_format_prompt.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
