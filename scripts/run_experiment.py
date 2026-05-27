@@ -124,6 +124,7 @@ import c271_full_reference_sft_gate_audit
 import c272_full_reference_sft_smoke
 import c273_min_full_reference_sft_unblock
 import c274_full_reference_sft_validation_cap_repair
+import c275_tiny_full_reference_sft_cap_probe
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -253,6 +254,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C272",
             "C273",
             "C274",
+            "C275",
         ],
         help="Experiment ID to run.",
     )
@@ -515,6 +517,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c273_min_full_reference_sft_unblock.run(forwarded)
     if args.id == "C274":
         return c274_full_reference_sft_validation_cap_repair.run(forwarded)
+    if args.id == "C275":
+        return c275_tiny_full_reference_sft_cap_probe.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
