@@ -23,6 +23,7 @@ EXPERIMENT_SLUG = "C246_failure_gated_same_model_512"
 DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C246_artifacts"
 MODEL_ID = "Qwen/Qwen3-8B-AWQ"
 FALLBACK_MAX_TOKENS = 512
+FALLBACK_PREFIX_OVERRIDE: str | None = None
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -152,7 +153,13 @@ def run_validation(args: argparse.Namespace) -> dict[str, Any]:
         for idx, item in enumerate(baseline_eval)
         if item["flags"]["hit_max_tokens"] or item["flags"]["repetition_loop"]
     ]
-    routed_prompts = [prompts[idx] for idx in routed_indices]
+    if FALLBACK_PREFIX_OVERRIDE is None:
+        routed_prompts = [prompts[idx] for idx in routed_indices]
+    else:
+        routed_prompts = [
+            probe.apply_user_only_template(tokenizer, str(rows[idx]["question"]), True, FALLBACK_PREFIX_OVERRIDE)
+            for idx in routed_indices
+        ]
     routed_rows = [rows[idx] for idx in routed_indices]
     fallback_generation_s = 0.0
     fallback_eval: list[dict[str, Any]] = []
