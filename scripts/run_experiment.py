@@ -110,6 +110,7 @@ import c257_coherent_residual_family_miner
 import c258_c111_family_stratified_validation
 import c259_chemistry_geometry_subfamily_miner
 import c260_c111_chem_geometry_subfamily_validation
+import c261_strict_chem_balancing_route_audit
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -225,6 +226,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C258",
             "C259",
             "C260",
+            "C261",
         ],
         help="Experiment ID to run.",
     )
@@ -459,6 +461,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c259_chemistry_geometry_subfamily_miner.run(forwarded)
     if args.id == "C260":
         return c260_c111_chem_geometry_subfamily_validation.run(forwarded)
+    if args.id == "C261":
+        return c261_strict_chem_balancing_route_audit.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
