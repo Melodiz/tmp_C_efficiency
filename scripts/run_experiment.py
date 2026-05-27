@@ -117,6 +117,7 @@ import c264_strict_time_unit_route_audit
 import c265_reference_style_aggregate_analysis
 import c266_c111_reference_style_gap
 import c267_answer_marker_neutralization
+import c268_answer_marker_neutralization_scaled
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -239,6 +240,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C265",
             "C266",
             "C267",
+            "C268",
         ],
         help="Experiment ID to run.",
     )
@@ -487,6 +489,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c266_c111_reference_style_gap.run(forwarded)
     if args.id == "C267":
         return c267_answer_marker_neutralization.run(forwarded)
+    if args.id == "C268":
+        return c268_answer_marker_neutralization_scaled.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
