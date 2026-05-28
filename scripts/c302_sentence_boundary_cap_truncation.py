@@ -224,7 +224,7 @@ def run_validation(args: argparse.Namespace) -> dict[str, Any]:
             "startup_s": startup_s,
             "generation_s": generation_s,
             "projected_total_4000_s": projected_total_4000_s,
-            "peak_gpu_mb": sampler.peak_mb,
+            "peak_gpu_mb": sampler.peak_used_mb,
         },
     }
 
