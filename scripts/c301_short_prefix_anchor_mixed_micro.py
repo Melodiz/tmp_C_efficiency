@@ -1,0 +1,63 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Sequence
+
+import c177_base_vs_lora_aggregate_validation_smoke as c177
+import c299_anchor_mixed_sft_smoke as c299
+
+
+EXPERIMENT_ID = "C301"
+EXPERIMENT_SLUG = "C301_short_prefix_anchor_mixed_micro"
+
+
+def task_probe_source(
+    model_id: str,
+    train_rows: int,
+    val_rows: int,
+    steps: int,
+    max_seq_len: int,
+    max_new_tokens: int,
+    seed: int,
+) -> str:
+    source = c299.task_probe_source(model_id, train_rows, val_rows, steps, max_seq_len, max_new_tokens, seed)
+    source = source.replace(c299.ANCHOR_PREFIX, c177.USER_PREFIX)
+    return source
+
+
+def write_report(path: Path, summary: dict) -> None:
+    c299.write_report(path, summary)
+    text = path.read_text(encoding="utf-8")
+    text = text.replace("# C299 Anchor-Mixed SFT Smoke", "# C301 Short-Prefix Anchor-Mixed Micro", 1)
+    path.write_text(text, encoding="utf-8")
+
+
+def run(argv: Sequence[str] | None = None) -> int:
+    c177.EXPERIMENT_ID = EXPERIMENT_ID
+    c177.EXPERIMENT_SLUG = EXPERIMENT_SLUG
+    c177.DEFAULT_OUT_DIR = Path("artifacts") / "tmp" / "C301_artifacts"
+    c177.DEFAULT_TARGET_DIR = Path("/content/c301_train_site")
+    c177.REMOTE_ADAPTER_DIR = Path("/content/c301_adapter_scratch")
+    c177.task_probe_source = task_probe_source
+    c177.write_report = write_report
+    forwarded = list(argv or [])
+    defaults = (
+        ("--train-rows", "24"),
+        ("--val-rows", "16"),
+        ("--steps", "8"),
+        ("--max-seq-len", "512"),
+        ("--max-new-tokens", "320"),
+        ("--seed", "301"),
+    )
+    for flag, value in defaults:
+        if flag not in forwarded:
+            forwarded.extend([flag, value])
+    return c177.run(forwarded)
+
+
+def main() -> None:
+    raise SystemExit(run())
+
+
+if __name__ == "__main__":
+    main()
