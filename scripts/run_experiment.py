@@ -170,6 +170,7 @@ import c332_c111_mild_repetition_penalty
 import c333_failure_gated_mild_repetition_penalty
 import c335_long_route_adaptive_mild_repetition_penalty
 import c337_c111_low_temperature_alternate_sample
+import c338_qwen3_8b_fp8_quantization_diagnostic
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -345,6 +346,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C333",
             "C335",
             "C337",
+            "C338",
         ],
         help="Experiment ID to run.",
     )
@@ -699,6 +701,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c335_long_route_adaptive_mild_repetition_penalty.run(forwarded)
     if args.id == "C337":
         return c337_c111_low_temperature_alternate_sample.run(forwarded)
+    if args.id == "C338":
+        return c338_qwen3_8b_fp8_quantization_diagnostic.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
