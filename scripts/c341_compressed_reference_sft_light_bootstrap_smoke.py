@@ -133,7 +133,8 @@ def run_smoke(args: argparse.Namespace, paths: dict[str, Path]) -> dict[str, Any
 def write_report(path: Path, summary: dict[str, Any]) -> None:
     c178.write_report(path, summary)
     text = path.read_text(encoding="utf-8")
-    text = text.replace("# C178 SFT Aggregate Metric/Cap Diagnostic", "# C341 Compressed-Reference SFT Light-Bootstrap Smoke", 1)
+    title = EXPERIMENT_SLUG.replace("_", " ").title()
+    text = text.replace("# C178 SFT Aggregate Metric/Cap Diagnostic", f"# {title}", 1)
     text += f"\n## Containment Deltas\n`{json.dumps(summary.get('containment_deltas', {}), ensure_ascii=False)}`\n"
     path.write_text(text, encoding="utf-8")
 

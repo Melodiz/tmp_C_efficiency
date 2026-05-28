@@ -174,6 +174,7 @@ import c338_qwen3_8b_fp8_quantization_diagnostic
 import c340_reference_style_structure_gate
 import c341_compressed_reference_sft_light_bootstrap_smoke
 import c342_compressed_reference_sft_ultramicro_light_bootstrap_smoke
+import c343_compressed_reference_sft_ultramicro_cap_repair
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -353,6 +354,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C340",
             "C341",
             "C342",
+            "C343",
         ],
         help="Experiment ID to run.",
     )
@@ -715,6 +717,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c341_compressed_reference_sft_light_bootstrap_smoke.run(forwarded)
     if args.id == "C342":
         return c342_compressed_reference_sft_ultramicro_light_bootstrap_smoke.run(forwarded)
+    if args.id == "C343":
+        return c343_compressed_reference_sft_ultramicro_cap_repair.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
