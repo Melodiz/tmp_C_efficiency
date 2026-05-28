@@ -142,6 +142,7 @@ import c300_anchor_mixed_sft_micro_retry
 import c301_short_prefix_anchor_mixed_micro
 import c302_sentence_boundary_cap_truncation
 import c304_question_keyword_echo_scaffold
+import c305_scratchpad_answer_augmented_c111
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -289,6 +290,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C301",
             "C302",
             "C304",
+            "C305",
         ],
         help="Experiment ID to run.",
     )
@@ -587,6 +589,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c302_sentence_boundary_cap_truncation.run(forwarded)
     if args.id == "C304":
         return c304_question_keyword_echo_scaffold.run(forwarded)
+    if args.id == "C305":
+        return c305_scratchpad_answer_augmented_c111.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
