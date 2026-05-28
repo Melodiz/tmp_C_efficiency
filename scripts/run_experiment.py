@@ -156,6 +156,7 @@ import c317_qwen3_30b_a3b_fp8_greedy
 import c318_qwen3_30b_a3b_fp8_native_prompt
 import c319_structured_language_subfamily_miner
 import c320_c111_structured_language_subfamily_validation
+import c321_structured_language_list_prompt_route
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -317,6 +318,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C318",
             "C319",
             "C320",
+            "C321",
         ],
         help="Experiment ID to run.",
     )
@@ -643,6 +645,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c319_structured_language_subfamily_miner.run(forwarded)
     if args.id == "C320":
         return c320_c111_structured_language_subfamily_validation.run(forwarded)
+    if args.id == "C321":
+        return c321_structured_language_list_prompt_route.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
