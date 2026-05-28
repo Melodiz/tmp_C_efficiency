@@ -138,6 +138,7 @@ import c293_strict_math_scratchpad_route
 import c294_strict_scratchpad_extraction
 import c296_strict_arithmetic_final_answer_route
 import c299_anchor_mixed_sft_smoke
+import c300_anchor_mixed_sft_micro_retry
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -281,6 +282,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C294",
             "C296",
             "C299",
+            "C300",
         ],
         help="Experiment ID to run.",
     )
@@ -571,6 +573,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c296_strict_arithmetic_final_answer_route.run(forwarded)
     if args.id == "C299":
         return c299_anchor_mixed_sft_smoke.run(forwarded)
+    if args.id == "C300":
+        return c300_anchor_mixed_sft_micro_retry.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
