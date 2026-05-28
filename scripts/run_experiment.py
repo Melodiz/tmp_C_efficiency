@@ -144,6 +144,7 @@ import c302_sentence_boundary_cap_truncation
 import c304_question_keyword_echo_scaffold
 import c305_scratchpad_answer_augmented_c111
 import c307_qwen3_4b_2507_recommended_sampling
+import c309_qwen3_4b_2507_native_prompt
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -293,6 +294,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C304",
             "C305",
             "C307",
+            "C309",
         ],
         help="Experiment ID to run.",
     )
@@ -595,6 +597,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c305_scratchpad_answer_augmented_c111.run(forwarded)
     if args.id == "C307":
         return c307_qwen3_4b_2507_recommended_sampling.run(forwarded)
+    if args.id == "C309":
+        return c309_qwen3_4b_2507_native_prompt.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
