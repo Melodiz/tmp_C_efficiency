@@ -149,6 +149,7 @@ import c310_async_short_prefix_anchor_mixed_retry
 import c311_ultra_micro_short_prefix_anchor_mixed_retry
 import c312_short_reference_anchor_mixed_smoke
 import c313_short_reference_anchor_mixed_retry
+import c314_c111_512_repetition_penalty
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -303,6 +304,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C311",
             "C312",
             "C313",
+            "C314",
         ],
         help="Experiment ID to run.",
     )
@@ -615,6 +617,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c312_short_reference_anchor_mixed_smoke.run(forwarded)
     if args.id == "C313":
         return c313_short_reference_anchor_mixed_retry.run(forwarded)
+    if args.id == "C314":
+        return c314_c111_512_repetition_penalty.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
