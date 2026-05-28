@@ -168,6 +168,7 @@ import c329_accepted_reference_style_prompt
 import c330_bounded_reference_style_prompt
 import c332_c111_mild_repetition_penalty
 import c333_failure_gated_mild_repetition_penalty
+import c335_long_route_adaptive_mild_repetition_penalty
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -341,6 +342,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C330",
             "C332",
             "C333",
+            "C335",
         ],
         help="Experiment ID to run.",
     )
@@ -691,6 +693,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c332_c111_mild_repetition_penalty.run(forwarded)
     if args.id == "C333":
         return c333_failure_gated_mild_repetition_penalty.run(forwarded)
+    if args.id == "C335":
+        return c335_long_route_adaptive_mild_repetition_penalty.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
