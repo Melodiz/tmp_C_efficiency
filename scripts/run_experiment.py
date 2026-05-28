@@ -160,6 +160,7 @@ import c321_structured_language_list_prompt_route
 import c322_c111_logic_finance_sequence_validation
 import c323_finance_percent_subfamily_miner
 import c324_compressed_reference_sft_gate
+import c325_compressed_reference_sft_smoke
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -325,6 +326,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "C322",
             "C323",
             "C324",
+            "C325",
         ],
         help="Experiment ID to run.",
     )
@@ -659,6 +661,8 @@ def run(argv: Sequence[str] | None = None) -> int:
         return c323_finance_percent_subfamily_miner.run(forwarded)
     if args.id == "C324":
         return c324_compressed_reference_sft_gate.run(forwarded)
+    if args.id == "C325":
+        return c325_compressed_reference_sft_smoke.run(forwarded)
     raise ValueError(f"Unsupported experiment id: {args.id}")
 
 
